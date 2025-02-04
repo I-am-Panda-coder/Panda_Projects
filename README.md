@@ -1,20 +1,6 @@
-# Native Animation Framework
+# NAF Bridge
 
-A multi-character animation framework for Fallout 4.
-
-## Features
-
-- Custom face animation system with an in-game creator.
-- Custom full-body animation system with an in-game creator (aka the Animation Studio).
-- Arbitrary inverse kinematic chains with support for skipped-bones, integrated into the full-body animation creator.
-- A configurable multi-character scene system for playing synchronized animations with precisely positioned actors, compatible with XMLs made for AAF.
-- AI package override system that can apply any arbitrary AI package to an actor without being overriden by quests/etc.
-- Extensive papyrus API functions for all aforementioned features.
-
-## Technical Capibilities
-
-- Cubic spline-based keyframe sampling for natural movement, with either simple float values or quaternions.
-- Precise timing thread for delayed tasks, which can be serialized to the F4SE cosave to maintain state between game sessions.
+Fork for the original NAF https://github.com/Deweh/Native-Animation-Framework
 
 ## Build Requirements
 
