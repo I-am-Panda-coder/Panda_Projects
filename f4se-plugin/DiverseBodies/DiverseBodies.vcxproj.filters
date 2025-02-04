@@ -1,0 +1,198 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Исходные файлы">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Файлы заголовков">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Файлы ресурсов">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Файлы ресурсов\detourxs">
+      <UniqueIdentifier>{52700a88-15d6-4e0b-9a0c-ebe04dd904dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\01_Parser">
+      <UniqueIdentifier>{1490d693-0f9b-45b8-acb2-e0e5baaa2782}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\01_Parser\HairFilter">
+      <UniqueIdentifier>{f939c4b3-917d-4f7c-b816-a72354f6c271}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\01_Parser\Implement">
+      <UniqueIdentifier>{a86179de-d34c-4735-9d8e-38b4701b06fa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\01_Parser\Conditions">
+      <UniqueIdentifier>{e9106b4f-6ca3-4ef2-9177-39573023ed1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\02_Manager">
+      <UniqueIdentifier>{691f274c-40ef-4fe5-bc56-2371b8a488ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\02_Manager\ActorPreset">
+      <UniqueIdentifier>{ba37974e-9991-47c0-98a7-83d91dfa3353}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\02_Manager\DirectApply">
+      <UniqueIdentifier>{144d7091-301f-4d4f-95c7-f99bed785c23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\00_Global">
+      <UniqueIdentifier>{95a48b75-7b46-4b01-a9aa-71aad91cc02c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\01_Parser\INI Parser">
+      <UniqueIdentifier>{24731024-8680-4b50-950f-ab52d63ffba4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\01_Parser\PUGI">
+      <UniqueIdentifier>{2bbf658b-c9bb-404d-ae93-9fd31f812fc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\04_Utils">
+      <UniqueIdentifier>{e84f8a37-ebaa-40f4-82dd-3eda5544b08a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\04_Utils\Thread">
+      <UniqueIdentifier>{ea6f8610-23ce-4d97-b788-a1fbdda59904}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\04_Utils\Utils">
+      <UniqueIdentifier>{ba02e2e9-6b19-4b1d-9cce-6cddde696db6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\03_Hooks">
+      <UniqueIdentifier>{02a617a9-5a09-4348-9e78-b840d88f1a59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\03_Hooks\LooksMenu">
+      <UniqueIdentifier>{6c3b5fce-8ee1-41a0-8e91-640e28c29140}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\03_Hooks\F4SE">
+      <UniqueIdentifier>{64d7ae2e-6882-4018-a2c1-24b1843a9e78}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\03_Hooks\ProccessingSafe">
+      <UniqueIdentifier>{48691308-6eae-4b79-a823-4edd3e6ef3ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Исходные файлы\03_Hooks\LooksMenu\FixedString">
+      <UniqueIdentifier>{09552660-56a9-4a18-acdd-ce0f29127a73}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\main_dbredux.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\IniParser\Ini.cpp">
+      <Filter>Исходные файлы\01_Parser\INI Parser</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\utils\utility.cpp">
+      <Filter>Исходные файлы\04_Utils\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\detourxs\detourxs.cpp">
+      <Filter>Файлы ресурсов\detourxs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\pugixml\src\pugixml.cpp">
+      <Filter>Исходные файлы\01_Parser\PUGI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\NAFicator\ThreadPool\ThreadPool.cpp">
+      <Filter>Исходные файлы\04_Utils\Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Globals\Globals.cpp">
+      <Filter>Исходные файлы\00_Global</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\utils\RandomGenerator.cpp">
+      <Filter>Исходные файлы\04_Utils\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Parser\Conditions.cpp">
+      <Filter>Исходные файлы\01_Parser\Conditions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Parser\HairFilter.cpp">
+      <Filter>Исходные файлы\01_Parser\HairFilter</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Parser\Diversers_Bodymorphs.cpp">
+      <Filter>Исходные файлы\01_Parser\Implement</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Parser\Diversers_Hairs.cpp">
+      <Filter>Исходные файлы\01_Parser\Implement</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Parser\Diversers_Overlays.cpp">
+      <Filter>Исходные файлы\01_Parser\Implement</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Parser\Diversers_Skins.cpp">
+      <Filter>Исходные файлы\01_Parser\Implement</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Manager\Manager.cpp">
+      <Filter>Исходные файлы\02_Manager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Manager\ManagerActorPreset.cpp">
+      <Filter>Исходные файлы\02_Manager\ActorPreset</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Manager\ApplyPresetFromFile.cpp">
+      <Filter>Исходные файлы\02_Manager\DirectApply</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Hooks\LooksMenuInterfaces.cpp">
+      <Filter>Исходные файлы\03_Hooks\LooksMenu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Hooks\hooks.cpp">
+      <Filter>Исходные файлы\03_Hooks\F4SE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Hooks\ProcessingSafe.cpp">
+      <Filter>Исходные файлы\03_Hooks\ProccessingSafe</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extern\DiverseBodiesRedux\Hooks\FixedString.cpp">
+      <Filter>Исходные файлы\03_Hooks\LooksMenu\FixedString</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\version.h">
+      <Filter>Исходные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\IniParser\Ini.h">
+      <Filter>Исходные файлы\01_Parser\INI Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\utils\utility.h">
+      <Filter>Исходные файлы\04_Utils\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\pugixml\src\pugiconfig.hpp">
+      <Filter>Исходные файлы\01_Parser\PUGI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\pugixml\src\pugixml.hpp">
+      <Filter>Исходные файлы\01_Parser\PUGI</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\NAFicator\ThreadPool\ThreadPool.h">
+      <Filter>Исходные файлы\04_Utils\Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Globals\Globals.h">
+      <Filter>Исходные файлы\00_Global</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\utils\RandomGenerator.h">
+      <Filter>Исходные файлы\04_Utils\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Parser\Conditions.h">
+      <Filter>Исходные файлы\01_Parser\Conditions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Globals\consts.h">
+      <Filter>Исходные файлы\00_Global</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Parser\HairFilter.h">
+      <Filter>Исходные файлы\01_Parser\HairFilter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Parser\Diversers.h">
+      <Filter>Исходные файлы\01_Parser</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Manager\Manager.h">
+      <Filter>Исходные файлы\02_Manager</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Manager\ApplyPresetFromFile.h">
+      <Filter>Исходные файлы\02_Manager\DirectApply</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Hooks\LooksMenuInterfaces.h">
+      <Filter>Исходные файлы\03_Hooks\LooksMenu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Hooks\hooks.h">
+      <Filter>Исходные файлы\03_Hooks\F4SE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Hooks\ProcessingSafe.h">
+      <Filter>Исходные файлы\03_Hooks\ProccessingSafe</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Hooks\FixedString.h">
+      <Filter>Исходные файлы\03_Hooks\LooksMenu\FixedString</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Manager\ManagerActorPreset.h">
+      <Filter>Исходные файлы\02_Manager\ActorPreset</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
