@@ -3,6 +3,7 @@
 #include "RE/Fallout.h"
 
 #include "DiverseBodiesRedux/Globals/consts.h"
+#include "IniParser/Ini.h"
 
 #ifndef player
 #	define player GetPlayer()
@@ -16,28 +17,65 @@ inline static std::string empty_string = "";
 
 inline static bool game_data_loaded_state = false;
 
+class iniSettings
+{
+	inline static iniSettings* instance = nullptr;
+	
+	constexpr static const char* path = "Data/MCM/Settings/DiverseBodiesRedux.ini";
+	constexpr static const char* alt_path = "Data/MCM/Config/DiverseBodiesRedux/settings.ini";
+
+	ini::map map;
+
+	int i_bodymorph_male_chance{80};
+	int i_bodymorph_female_chance{80};
+	int i_bodyhair_male_chance{100};
+	int i_bodyhair_female_chance{100};
+	int i_skin_male_chance{0};
+	int i_skin_female_chance{0};
+	int i_hair_male_chance{0};
+	int i_hair_female_chance{0};
+	bool b_if_hat_equipped{};
+	bool b_only_if_vanilla_hair{ true };
+	int i_performance{10};
+	int i_delay_timer{5};
+
+	iniSettings();
+	void loadSettings();
+
+	public:
+
+	iniSettings(const iniSettings&) = delete;
+	iniSettings& operator=(const iniSettings&) = delete;
+	iniSettings(iniSettings&&) noexcept;
+	iniSettings& operator=(iniSettings&&) noexcept;
+
+	~iniSettings();
+
+	static iniSettings& getInstance();
+
+	void update();
+
+	inline int getBodyMorphMaleChance() const { return i_bodymorph_male_chance; }
+	inline int getBodyMorphFemaleChance() const { return i_bodymorph_female_chance; }
+	inline int getBodyHairMaleChance() const { return i_bodyhair_male_chance; }
+	inline int getBodyHairFemaleChance() const { return i_bodyhair_female_chance; }
+	inline int getSkinMaleChance() const { return i_skin_male_chance; }
+	inline int getSkinFemaleChance() const { return i_skin_female_chance; }
+	inline int getHairMaleChance() const { return i_hair_male_chance; }
+	inline int getHairFemaleChance() const { return i_hair_female_chance; }
+	inline bool isHatEquipped() const { return b_if_hat_equipped; }
+	inline bool isOnlyIfVanillaHair() const { return b_only_if_vanilla_hair; }
+	inline int getPerformance() const { return i_performance; }
+	inline int getDelayTimer() const { return i_delay_timer; }
+};
+
 class global
 {
 	inline static RE::BGSKeyword* kwd_diversed = nullptr;
 	inline static RE::BGSKeyword* kwd_excluded = nullptr;
-	inline static RE::TESGlobal* b_ignore_excluded = nullptr;
-	inline static RE::TESGlobal* b_ignore_diversed = nullptr;
-	inline static RE::TESGlobal* i_chance_bodymorph_male = nullptr;
-	inline static RE::TESGlobal* i_chance_bodymorph_female = nullptr;
-	inline static RE::TESGlobal* i_chance_bodyhair_male = nullptr;
-	inline static RE::TESGlobal* i_chance_bodyhair_female = nullptr;
-	inline static RE::TESGlobal* i_chance_skin_male = nullptr;
-	inline static RE::TESGlobal* i_chance_skin_female = nullptr;
-	inline static RE::TESGlobal* i_chance_hair_male = nullptr;
-	inline static RE::TESGlobal* i_chance_hair_female = nullptr;
 
 	inline static RE::BGSListForm* flst_excluded_npc = nullptr;
 	inline static RE::BGSListForm* flst_qualifying_race = nullptr;
-	inline static RE::TESGlobal* cur_processing = nullptr;
-	inline static RE::TESGlobal* max_processing = nullptr;
-	inline static RE::TESGlobal* b_ignore_if_hat_equipped = nullptr;
-	inline static RE::TESGlobal* b_only_if_vanilla_hair = nullptr;
-	inline static RE::TESGlobal* float_body_update_cooling_time = nullptr;
 
 	inline static RE::BGSMessage* msg_DB_WrongFile = nullptr;
 	inline static RE::BGSMessage* msg_DB_WrongFileActor = nullptr;
@@ -46,21 +84,6 @@ class global
 	inline static RE::AlchemyItem* alch_change_morphs_potion = nullptr;
 
 public:
-
-	//global variables
-	static RE::TESGlobal* ignore_excluded();
-	static RE::TESGlobal* ignore_diversed();
-	static RE::TESGlobal* chance_bodymorph_male();
-	static RE::TESGlobal* chance_bodymorph_female();
-	static RE::TESGlobal* chance_bodyhair_male();
-	static RE::TESGlobal* chance_bodyhair_female();
-	static RE::TESGlobal* chance_skin_male();
-	static RE::TESGlobal* chance_skin_female();
-	static RE::TESGlobal* chance_hair_male();
-	static RE::TESGlobal* chance_hair_female();
-	static RE::TESGlobal* processing_max();
-	static RE::TESGlobal* ignore_hair_if_hat();
-	static RE::TESGlobal* only_if_vanilla_hair();
 
 	//keywords
 	static RE::BGSKeyword* diversed_kwd();
@@ -72,14 +95,9 @@ public:
 
 	//fnc
 	static bool is_diversed(RE::Actor* actor);
-	static bool is_ignore_diversed();
-	static bool is_ignore_excluded();
 	static bool is_excluded(RE::Actor* actor);
 	static bool is_qualified_race(RE::Actor* actor);
-	static bool is_ignore_hair_if_hat();
-	static bool is_only_if_vanilla_hair();
 	static int get_update_wait_time();
-	static int get_processing_max();
 
 	//messages
 	static const char* message_wrong_file();
@@ -98,7 +116,6 @@ template <class T>
 T* get_re_ptr(T*& ptr, uint32_t form, const std::string_view& plugin);
 std::string uint32ToHexString(uint32_t value);
 bool FileExists(const std::string& filename, const std::string& type);
-uint32_t GetThreadsMax();
 bool IsVanillaForm(const RE::TESForm* const form) noexcept;
 bool IsCreatedForm(const RE::TESForm* const form) noexcept;
 bool IsVanillaHair(const RE::Actor* const actor) noexcept;

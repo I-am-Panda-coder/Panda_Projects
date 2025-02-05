@@ -24,7 +24,7 @@ namespace ini
 	public:
 		map();
 		map(const map&);
-		map(const map&&);
+		map(map&& m);
 		map(const std::filesystem::path&);  // Конструктор считывает файл в IniMap
 		map(const std::string&);
 		map(const char*);
@@ -34,7 +34,7 @@ namespace ini
 		~map();                          // Деструктор обновляет данные в ini-файле, если данные были изменены
 
 		map operator=(const map& m);
-		map operator=(const map&& m);
+		map& operator=(map&& m);
 
 		template <class T>
 		T get(std::string key, std::string section);

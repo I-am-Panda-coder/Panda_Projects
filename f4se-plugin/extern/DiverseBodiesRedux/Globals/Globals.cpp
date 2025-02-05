@@ -2,74 +2,108 @@
 
 namespace logger = F4SE::log;
 
+iniSettings::iniSettings()
+{
+	loadSettings();
+}
+
+iniSettings::~iniSettings()
+{
+	delete instance;
+}
+
+iniSettings::iniSettings(iniSettings&& other) noexcept
+	:
+	i_bodymorph_male_chance(other.i_bodymorph_male_chance),
+	i_bodymorph_female_chance(other.i_bodymorph_female_chance),
+	i_bodyhair_male_chance(other.i_bodyhair_male_chance),
+	i_bodyhair_female_chance(other.i_bodyhair_female_chance),
+	i_skin_male_chance(other.i_skin_male_chance),
+	i_skin_female_chance(other.i_skin_female_chance),
+	i_hair_male_chance(other.i_hair_male_chance),
+	i_hair_female_chance(other.i_hair_female_chance),
+	b_if_hat_equipped(other.b_if_hat_equipped),
+	b_only_if_vanilla_hair(other.b_only_if_vanilla_hair),
+	i_performance(other.i_performance),
+	i_delay_timer(other.i_delay_timer)
+{
+	other.instance = nullptr;
+}
+
+iniSettings& iniSettings::operator=(iniSettings&& other) noexcept
+{
+	if (this != &other) {
+		i_bodymorph_male_chance = other.i_bodymorph_male_chance;
+		i_bodymorph_female_chance = other.i_bodymorph_female_chance;
+		i_bodyhair_male_chance = other.i_bodyhair_male_chance;
+		i_bodyhair_female_chance = other.i_bodyhair_female_chance;
+		i_skin_male_chance = other.i_skin_male_chance;
+		i_skin_female_chance = other.i_skin_female_chance;
+		i_hair_male_chance = other.i_hair_male_chance;
+		i_hair_female_chance = other.i_hair_female_chance;
+		b_if_hat_equipped = other.b_if_hat_equipped;
+		b_only_if_vanilla_hair = other.b_only_if_vanilla_hair;
+		i_performance = other.i_performance;
+		i_delay_timer = other.i_delay_timer;
+
+		other.instance = nullptr;
+	}
+	return *this;
+}
+
+ void iniSettings::loadSettings()
+{
+	auto tryLoadFromFile = [this](auto& var, const char* key, const char* section) {
+		try {
+			var = map.get<std::decay_t<decltype(var)>>(key, section);
+		} catch (...) {
+			//
+		}
+	};
+
+	std::filesystem::path filePath(path);
+	if (std::filesystem::exists(filePath)) {
+		map = ini::map(filePath);
+	} else {
+		filePath = alt_path;
+		if (std::filesystem::exists(filePath)) {
+			map = ini::map(filePath);
+		}
+	}
+
+	tryLoadFromFile(i_bodymorph_male_chance, "i_bodymorph_male_chance", "settings");
+	tryLoadFromFile(i_bodymorph_female_chance, "i_bodymorph_female_chance", "settings");
+	tryLoadFromFile(i_bodyhair_male_chance, "i_bodyhair_male_chance", "settings");
+	tryLoadFromFile(i_bodyhair_female_chance, "i_bodyhair_female_chance", "settings");
+	tryLoadFromFile(i_skin_male_chance, "i_skin_male_chance", "settings");
+	tryLoadFromFile(i_skin_female_chance, "i_skin_female_chance", "settings");
+	tryLoadFromFile(i_hair_male_chance, "i_hair_male_chance", "settings");
+	tryLoadFromFile(i_hair_female_chance, "i_hair_female_chance", "settings");
+	tryLoadFromFile(b_if_hat_equipped, "b_if_hat_equipped", "settings");
+	tryLoadFromFile(b_only_if_vanilla_hair, "b_only_if_vanilla_hair", "settings");
+	tryLoadFromFile(i_performance, "i_performance", "settings");
+	tryLoadFromFile(i_delay_timer, "i_delay_timer", "settings");
+}
+
+ iniSettings& iniSettings::getInstance()
+{
+	if (!instance) {
+		instance = new iniSettings();
+	}
+	return *instance;
+}
+
+ void iniSettings::update()
+{
+	loadSettings();
+}
+
 void InitForms()
 {
 	logger::info("Initialized form : {} ({})", global::diversed_kwd()->formEditorID, uint32ToHexString(global::diversed_kwd()->formID));
 	logger::info("Initialized form : {} ({})", global::excluded_kwd()->formEditorID, uint32ToHexString(global::excluded_kwd()->formID));
 	logger::info("Initialized form : {} ({})", global::excluded_npc()->GetFormEditorID(), uint32ToHexString(global::excluded_npc()->formID));
 	logger::info("Initialized form : {} ({})", global::qualified_race()->GetFormEditorID(), uint32ToHexString(global::qualified_race()->formID));
-	logger::info("Initialized form : {} ({})", global::processing_max()->formEditorID, uint32ToHexString(global::processing_max()->formID));
-	logger::info("Initialized form : {} ({}) : {}", global::ignore_excluded()->formEditorID, uint32ToHexString(global::ignore_excluded()->formID), static_cast<bool>(global::ignore_excluded()->value));
-	logger::info("Initialized form : {} ({}) : {}", global::ignore_diversed()->formEditorID, uint32ToHexString(global::ignore_diversed()->formID), static_cast<bool>(global::ignore_diversed()->value));
-
-	logger::info("Initialized form : {} ({}) : {}", global::chance_bodymorph_male()->formEditorID, uint32ToHexString(global::chance_bodymorph_male()->formID), static_cast<int>(global::chance_bodymorph_male()->value));
-	logger::info("Initialized form : {} ({}) : {}", global::chance_bodymorph_female()->formEditorID, uint32ToHexString(global::chance_bodymorph_female()->formID), static_cast<int>(global::chance_bodymorph_female()->value));
-	logger::info("Initialized form : {} ({}) : {}", global::chance_bodyhair_male()->formEditorID, uint32ToHexString(global::chance_bodyhair_male()->formID), static_cast<int>(global::chance_bodyhair_male()->value));
-	logger::info("Initialized form : {} ({}) : {}", global::chance_bodyhair_female()->formEditorID, uint32ToHexString(global::chance_bodyhair_female()->formID), static_cast<int>(global::chance_bodyhair_female()->value));
-	logger::info("Initialized form : {} ({}) : {}", global::chance_skin_male()->formEditorID, uint32ToHexString(global::chance_skin_male()->formID), static_cast<int>(global::chance_skin_male()->value));
-	logger::info("Initialized form : {} ({}) : {}", global::chance_skin_female()->formEditorID, uint32ToHexString(global::chance_skin_female()->formID), static_cast<int>(global::chance_skin_female()->value));
-	logger::info("Initialized form : {} ({}) : {}", global::chance_hair_male()->formEditorID, uint32ToHexString(global::chance_hair_male()->formID), static_cast<int>(global::chance_hair_male()->value));
-	logger::info("Initialized form : {} ({}) : {}", global::chance_hair_female()->formEditorID, uint32ToHexString(global::chance_hair_female()->formID), static_cast<int>(global::chance_hair_female()->value));
-	logger::info("Initialized form : {} ({}) : {}", global::ignore_hair_if_hat()->formEditorID, uint32ToHexString(global::ignore_hair_if_hat()->formID), static_cast<int>(global::ignore_hair_if_hat()->value));
-}
-
-RE::TESGlobal* global::chance_bodymorph_male()
-{
-	return i_chance_bodymorph_male ? i_chance_bodymorph_male : get_re_ptr<RE::TESGlobal>(i_chance_bodymorph_male, formid_gv_int_chance_bodymorph_male, plugin_name);
-}
-
-RE::TESGlobal* global::chance_bodymorph_female()
-{
-	return i_chance_bodymorph_female ? i_chance_bodymorph_female : get_re_ptr<RE::TESGlobal>(i_chance_bodymorph_female, formid_gv_int_chance_bodymorph_female, plugin_name);
-}
-
-RE::TESGlobal* global::chance_bodyhair_male()
-{
-	return i_chance_bodyhair_male ? i_chance_bodyhair_male : get_re_ptr<RE::TESGlobal>(i_chance_bodyhair_male, formid_gv_int_chance_bodyhair_male, plugin_name);
-}
-
-RE::TESGlobal* global::chance_bodyhair_female()
-{
-	return i_chance_bodyhair_female ? i_chance_bodyhair_female : get_re_ptr<RE::TESGlobal>(i_chance_bodyhair_female, formid_gv_int_chance_bodyhair_female, plugin_name);
-}
-RE::TESGlobal* global::chance_skin_male()
-{
-	return i_chance_skin_male ? i_chance_skin_male : get_re_ptr<RE::TESGlobal>(i_chance_skin_male, formid_gv_int_chance_skin_male, plugin_name);
-}
-
-RE::TESGlobal* global::chance_skin_female()
-{
-	return i_chance_skin_female ? i_chance_skin_female : get_re_ptr<RE::TESGlobal>(i_chance_skin_female, formid_gv_int_chance_skin_female, plugin_name);
-}
-
-RE::TESGlobal* global::chance_hair_male()
-{
-	return i_chance_hair_male ? i_chance_hair_male : get_re_ptr<RE::TESGlobal>(i_chance_hair_male, formid_gv_int_chance_hair_male, plugin_name);
-}
-
-RE::TESGlobal* global::chance_hair_female()
-{
-	return i_chance_hair_female ? i_chance_hair_female : get_re_ptr<RE::TESGlobal>(i_chance_hair_female, formid_gv_int_chance_hair_female, plugin_name);
-}
-
-RE::TESGlobal* global::ignore_diversed()
-{
-	return b_ignore_diversed ? b_ignore_diversed : get_re_ptr<RE::TESGlobal>(b_ignore_diversed, formid_gv_bool_ignore_diversed, plugin_name);
-}
-
-RE::TESGlobal* global::ignore_excluded()
-{
-	return b_ignore_excluded ? b_ignore_excluded : get_re_ptr<RE::TESGlobal>(b_ignore_excluded, formid_gv_bool_ignore_excluded, plugin_name);
 }
 
 std::string uint32ToHexString(uint32_t value)
@@ -117,27 +151,6 @@ bool global::is_qualified_race(RE::Actor* actor)
 	return false;
 }
 
-bool global::is_ignore_diversed()
-{
-	return ignore_diversed()->value;
-}
-
-bool global::is_ignore_excluded()
-{
-	return ignore_excluded()->value;
-}
-
-bool global::is_ignore_hair_if_hat()
-{
-	return ignore_hair_if_hat()->value;
-}
-
-bool global::is_only_if_vanilla_hair()
-{
-	return only_if_vanilla_hair()->value;
-}
-
-
 template <class T>
 T* get_re_ptr(T*& ptr, uint32_t form, const std::string_view& plugin)
 {
@@ -161,28 +174,6 @@ RE::BGSListForm* global::excluded_npc()
 RE::BGSListForm* global::qualified_race()
 {
 	return flst_qualifying_race ? flst_qualifying_race : get_re_ptr<RE::BGSListForm>(flst_qualifying_race, formid_flst_qualifying_race, plugin_name);
-}
-
-RE::TESGlobal* global::processing_max()
-{
-	return max_processing ? max_processing : get_re_ptr<RE::TESGlobal>(max_processing, formid_gv_int_performance, plugin_name);
-}
-
-int global::get_processing_max()
-{
-	if (!game_data_loaded_state)
-		return 10;
-	return global::processing_max()->value;
-}
-
-RE::TESGlobal* global::ignore_hair_if_hat()
-{
-	return b_ignore_if_hat_equipped ? b_ignore_if_hat_equipped : get_re_ptr<RE::TESGlobal>(b_ignore_if_hat_equipped, formid_gv_bool_ignore_if_hat_equipped, plugin_name);
-}
-
-RE::TESGlobal* global::only_if_vanilla_hair()
-{
-	return b_only_if_vanilla_hair ? b_only_if_vanilla_hair : get_re_ptr<RE::TESGlobal>(b_only_if_vanilla_hair, formid_gv_bool_only_if_vanilla_hair, plugin_name);
 }
 
 
@@ -221,11 +212,6 @@ bool FileExists(const std::string& filename, const std::string& type)
 	}
 
 	return LogAndReturn(filename, files);
-}
-
-uint32_t GetThreadsMax()
-{
-	return global::processing_max()->value < 1 ? 1 : global::processing_max()->value;
 }
 
 bool IsVanillaHair(const RE::Actor* const actor) noexcept
@@ -347,10 +333,10 @@ bool check(RE::Actor* actor)
 		return false;
 	}
 
-	if (global::is_diversed(actor) && !global::is_ignore_diversed()) {
-		//logger::info("{}({}) : canceled, already diversified", actor->GetFormEditorID(), uint32ToHexString(actor->formID));
-		return false;
-	}
+	//if (global::is_diversed(actor) && !global::is_ignore_diversed()) {
+	//	//logger::info("{}({}) : canceled, already diversified", actor->GetFormEditorID(), uint32ToHexString(actor->formID));
+	//	return false;
+	//}
 
 	return true;
 }
@@ -364,6 +350,7 @@ const char* global::message_wrong_file()
 	auto txt = desc.GetText(*msg_DB_WrongFile->GetFile());
 	return txt.GetString();
 }
+
 const char* global::message_wrong_actor_or_gender()
 {
 	if (!msg_DB_WrongFileActor)
@@ -381,9 +368,7 @@ int global::get_update_wait_time()
 {
 	if (!game_data_loaded_state)
 		return 5;
-	if (!float_body_update_cooling_time)
-		float_body_update_cooling_time = get_re_ptr<RE::TESGlobal>(float_body_update_cooling_time, formid_gv_float_body_update_cooling_time, plugin_name);
-	return float_body_update_cooling_time->value > 0 ? float_body_update_cooling_time->value : 1;
+	return iniSettings::getInstance().getDelayTimer();
 }
 
 RE::BGSPerk* global::get_perk()

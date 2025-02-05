@@ -54,6 +54,12 @@ private:
 	std::unordered_set<Object> _set;
 };
 
+namespace papyrus
+{
+	extern void ApplyRandomHair(std::monostate, RE::Actor*);
+	extern void ApplyBodyPresetFromFile(std::monostate, RE::Actor*);
+};
+
 namespace dbr_manager
 {
 	class ActorsManager :
@@ -106,6 +112,9 @@ namespace dbr_manager
 
 		inline static concurrency::concurrent_unordered_map<uint32_t, ActorPreset> actors_map{};
 		constexpr static size_t serialization_ver = 100;
+
+		friend void papyrus::ApplyRandomHair(std::monostate, RE::Actor* actor);
+		friend void papyrus::ApplyBodyPresetFromFile(std::monostate, RE::Actor* actor);
 	};	
 }
 

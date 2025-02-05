@@ -140,7 +140,7 @@ namespace dbr_manager
 	bool ActorsManager::move_to_map(ActorPreset&& preset)
 	{
 		if (!preset.actor)
-			return false;  // Changed to return false instead of nothing
+			return false;  
 
 		// Check body preset validity
 		if (preset.body && !bodymorphs::Get(*preset.body))
@@ -432,7 +432,7 @@ namespace dbr_manager
 
 	void ActorsManager::update_loaded()
 	{	
-		std::this_thread::sleep_for(std::chrono::seconds(5));
+		std::this_thread::sleep_for(std::chrono::seconds(iniSettings::getInstance().getDelayTimer()));
 		
 		auto& q = looksmenu_hooked_queue;
 		std::vector<void*> to_delete{};
@@ -453,13 +453,14 @@ namespace dbr_manager
 				}
 			}
 		}
-
+		
+		deserialized = true;
 		for (auto& el : actors_map) {
 			auto actor = el.second.actor;
 			if (actor && actor->GetFullyLoaded3D()) {
 				//el.second.apply();
 				el.second.actor->Reset3D(false, RE::RESET_3D_FLAGS::kDiverseBodiesFlag, false, RE::RESET_3D_FLAGS::kNone);
-				std::this_thread::sleep_for(std::chrono::milliseconds(300));
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
 		}
 

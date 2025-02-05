@@ -70,6 +70,9 @@
     <Filter Include="Исходные файлы\03_Hooks\LooksMenu\FixedString">
       <UniqueIdentifier>{09552660-56a9-4a18-acdd-ce0f29127a73}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Исходные файлы\05_Papyrus">
+      <UniqueIdentifier>{c89ce6aa-ff3f-495f-b71a-85722111ecb9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\extern\DiverseBodiesRedux\main_dbredux.cpp">
@@ -193,6 +196,9 @@
     </ClInclude>
     <ClInclude Include="..\extern\DiverseBodiesRedux\Manager\ManagerActorPreset.h">
       <Filter>Исходные файлы\02_Manager\ActorPreset</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Papyrus\PapyrusBind.hpp">
+      <Filter>Исходные файлы\05_Papyrus</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

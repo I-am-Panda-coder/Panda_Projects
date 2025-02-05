@@ -191,6 +191,7 @@
     <ClInclude Include="..\extern\DiverseBodiesRedux\Manager\ApplyPresetFromFile.h" />
     <ClInclude Include="..\extern\DiverseBodiesRedux\Manager\Manager.h" />
     <ClInclude Include="..\extern\DiverseBodiesRedux\Manager\ManagerActorPreset.h" />
+    <ClInclude Include="..\extern\DiverseBodiesRedux\Papyrus\PapyrusBind.hpp" />
     <ClInclude Include="..\extern\DiverseBodiesRedux\Parser\Conditions.h" />
     <ClInclude Include="..\extern\DiverseBodiesRedux\Parser\Diversers.h" />
     <ClInclude Include="..\extern\DiverseBodiesRedux\Parser\HairFilter.h" />

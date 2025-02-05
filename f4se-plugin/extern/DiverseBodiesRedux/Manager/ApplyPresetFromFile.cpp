@@ -22,7 +22,7 @@ class MessageCallback0 : public RE::IMessageBoxCallback
 
 MessageCallback0 uno{};
 
-void ApplyBodyPresetFromFileForActor(RE::Actor* actor)
+std::string ApplyBodyPresetFromFileForActor(RE::Actor* actor)
 {
 	auto validate_actor = [](RE::Actor* actor) {
 		if (!actor) {
@@ -43,9 +43,11 @@ void ApplyBodyPresetFromFileForActor(RE::Actor* actor)
 		return true;
 	};
 
+	std::string preset_name{};
+
 	if (!validate_actor(actor)) {
-		RE::MessageMenuManager::GetSingleton()->Create("ERROR", global::message_wrong_actor_or_gender(), &uno, RE::WARNING_TYPES::kInGameMessage, "OK");
-		return;
+		//RE::MessageMenuManager::GetSingleton()->Create("ERROR", global::message_wrong_actor_or_gender(), &uno, RE::WARNING_TYPES::kInGameMessage, "OK");
+		return preset_name;
 	}
 	
 	// Структура для хранения информации о выбранном файле
@@ -75,6 +77,7 @@ void ApplyBodyPresetFromFileForActor(RE::Actor* actor)
 		bodymorphs::Preset bodyPreset{ std::filesystem::path(szFile) };
 		if (!bodyPreset.empty() && actor->GetSex() == bodyPreset.get_sex()) {
 			bodyPreset.apply(actor);
+			preset_name = bodyPreset.name();
 			//UpdateBodyMorphsForActor(actor);
 		}
 		else
@@ -82,4 +85,6 @@ void ApplyBodyPresetFromFileForActor(RE::Actor* actor)
 	} else {
 		RE::MessageMenuManager::GetSingleton()->Create("", global::message_wrong_file(), nullptr, RE::WARNING_TYPES::kInGameMessage);
 	}
+
+	return (std::move(preset_name));
 }

@@ -55,14 +55,19 @@ namespace ini
 	map::map(const char* path) :
 		map(std::filesystem::path(path)) {}
 
-	//file should be updated manually before copy
 	map::map(const map& m) :
 		pth(m.pth), inimap(m.inimap), modified(false) {}
 
-	map::map(const map&& m) :
-		pth(m.pth), inimap(m.inimap), modified(false) {}
+	map::map(map&& m)
+		:
+		pth(std::move(m.pth)),
+		inimap(std::move(m.inimap)),
+		modified_settings(std::move(m.modified_settings)),
+		modified(m.modified)
+	{
+		m.modified = false; 
+	}
 
-	//file should be updated manually before copy
 	map map::operator=(const map& m)
 	{
 		pth = m.pth;
@@ -71,12 +76,16 @@ namespace ini
 		modified = false;
 	}
 
-	map map::operator=(const map&& m)
+	map& map::operator=(map&& m)
 	{
-		pth = std::move(m.pth);
-		inimap = std::move(m.inimap);
-		modified_settings.clear();
-		modified = false;
+		if (this != &m) { 
+			pth = std::move(m.pth);
+			inimap = std::move(m.inimap);
+			modified_settings = std::move(m.modified_settings); 
+			modified = m.modified;                               
+			m.modified = false;                                 
+		}
+		return *this;  // Возвращаем ссылку на текущий объект
 	}
 
 	// Реализация метода contains

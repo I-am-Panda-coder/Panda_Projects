@@ -10,8 +10,8 @@
 #include <unordered_map>
 #include <utility>
 
-#include <DiverseBodiesRedux/BodiesDiverser/ApplyPresetFromFile.h>
-#include <DiverseBodiesRedux/BodiesDiverser/Manager.h>
+#include <DiverseBodiesRedux/Manager/ApplyPresetFromFile.h>
+#include <DiverseBodiesRedux/Manager/Manager.h>
 #include <DiverseBodiesRedux/Globals/Globals.h>
 #include <NAFicator/ThreadPool/ThreadPool.h>
 
@@ -20,218 +20,124 @@ namespace logger = F4SE::log;
 #define PAPYRUS_BIND(funcName) a_VM->BindNativeMethod(ver::PROJECT, #funcName, papyrus::funcName, true)
 #define PAPYRUS_BIND_LATENT(funcName, retType) a_VM->BindNativeMethod<retType>(ver::PROJECT, #funcName, papyrus::funcName, true, true)
 
-extern std::map<std::string_view, bodymorphs::BodyPreset> BodyPresets;
-extern std::vector<OverlayPreset> OverlayPresets;
-
-// Dummy classes
-class Bodymorph
-{};
-class Bodyhair
-{};
-class Skin
-{};
-class HairStyle
-{};
-
 namespace papyrus
 {
-	bool check_for_mcm_enable(RE::Actor* actor, decltype(global::chance_bodymorph_female) get_chance_fnc)
+	bool IsSerializeFinished(std::monostate)
 	{
-		auto is_enable = static_cast<bool>(get_chance_fnc()->value);
-		return !(actor->GetSex() == RE::Actor::Sex::Female && !is_enable) && !(actor->GetSex() == RE::Actor::Sex::Male && !is_enable);
+		return ::IsSerializeFinished();
 	}
 
-	bool apply_if_enabled(RE::Actor* actor, decltype(global::chance_bodymorph_female) chance_func, std::function<bool(RE::Actor*)> apply_func)
+	void ResetActorPreset(std::monostate, RE::Actor* actor)
 	{
-		return check_for_mcm_enable(actor, chance_func) && apply_func(actor);
+		if (!::IsSerializeFinished())
+			return;
+		auto p_preset = Find(actor);
+		if (p_preset)
+			p_preset->body.reset();
+		if (p_preset->skin)
+			p_preset->skin.reset();
+		if (p_preset->overlays)
+			p_preset->overlays.reset();
+		if (p_preset->hair)
+			p_preset->hair.reset();
+	}
+	
+	/*void ResetBody(RE::Actor* actor) 
+	{
+		if (!IsSerializeFinished())
+			return;
+		auto p_preset = Find(actor);
+		if (p_preset)
+			p_preset->body.reset();
 	}
 
-	bool apply_overlays(RE::Actor* actor)
+	void ResetHair(RE::Actor* actor)
 	{
-		if (!OverlayPresets.empty()) {
-			bool applied = false;
-			for (auto& overlay_preset : OverlayPresets) {
-				if (overlay_preset.apply(actor))
-					applied = true;
-			}
-			if (applied) {
-				UpdateOverlaysForActor(actor);
-			}
-			return true;
+		if (!IsSerializeFinished())
+			return;
+		auto p_preset = Find(actor);
+		if (p_preset)
+			p_preset->hair.reset();
+	}
+
+	void ResetSkin(RE::Actor* actor)
+	{
+		if (!IsSerializeFinished())
+			return;
+		auto p_preset = Find(actor);
+		if (p_preset)
+			p_preset->skin.reset();
+	}*/
+
+	/*void ResetOverlays(RE::Actor* actor)
+	{
+		if (!IsSerializeFinished())
+			return;
+		auto p_preset = Find(actor);
+		if (p_preset)
+			p_preset->overlays.reset();
+	}*/
+
+	void ApplyBodyPresetFromFile(std::monostate, RE::Actor* actor)
+	{
+		dbr_manager::ActorPreset preset;
+		auto p_preset = Find(actor);
+		if (!p_preset) {
+			preset = dbr_manager::ActorPreset(actor, int{});
+			p_preset = &preset;
+			auto body_preset = ApplyBodyPresetFromFileForActor(actor);
+			if (!body_preset.empty())
+				p_preset->body = std::move(body_preset);
+		} else {
+			auto body_preset = ApplyBodyPresetFromFileForActor(actor);
+			if (!body_preset.empty())
+				p_preset->body = std::move(body_preset);
 		}
-		return false;
-	}
 
-	//void Apply(std::monostate, RE::Actor* actor)
-	//{
-	//	if (!check(actor))
-	//		return;
-
-	//	ThreadHandler<ApplyRandomEverything>::get_thread()->enqueue([actor]() {
-	//		bool need3dreset = false;
-	//		bool needSkinReset = false;
-	//		if (check_for_mcm_enable(actor, actor->GetSex() == RE::Actor::Male ? global::chance_bodyhair_male : global::chance_bodyhair_female)) {
-	//			if (apply_overlays(actor))
-	//				UpdateOverlaysForActor(actor);
-	//		}
-
-	//		//actor->GetNPC()->formID; //formID имеет тип uint32_t. Разные actor могут иметь общий actor->GetNPC()->formID, нужно выставить такой лок, что бы в одно время мог обрабатываться только один актёр с таким actor->GetNPC()->formID
-	//		std::this_thread::sleep_for(std::chrono::milliseconds(global::get_update_wait_time()));
-	//		if (apply_if_enabled(actor, actor->GetSex() == RE::Actor::Male ? global::chance_skin_male : global::chance_skin_female, [](RE::Actor* actor) {
-	//				return ApplyRandomBodyskin(actor);
-	//			})) {
-	//			needSkinReset = true;
-	//		}
-	//		
-	//		if ((!global::is_ignore_hair_if_hat() || !IsHatEquipped(actor)) && (!global::is_only_if_vanilla_hair() || IsVanillaHair(actor))) {
-	//			if (apply_if_enabled(actor, actor->GetSex() == RE::Actor::Male ? global::chance_hair_male : global::chance_hair_female, [](RE::Actor* actor) {
-	//					return ApplyRandomHairStyle(actor);
-	//				})) {
-	//				need3dreset = true;
-	//			}
-	//		}
-
-	//		if (needSkinReset)
-	//			UpdateSkinForActor(actor);
-	//		else if (need3dreset)
-	//			UpdateHeadPartsForActor(actor);
-
-	//		//снимаем лок
-
-	//		if (apply_if_enabled(actor, actor->GetSex() == RE::Actor::Male ? global::chance_bodymorph_male : global::chance_bodymorph_female,
-	//			[](RE::Actor* actor) {
-	//			auto bm_preset = GetRandomBodyPreset(actor->GetSex(), BodyPreset::BodyType::NONE);
-	//			return bm_preset ? bm_preset->apply(actor) : false;
-	//		}))
-	//			UpdateBodyMorphsForActor(actor);
-	//	});
-	//}
-
-	void Apply(std::monostate, RE::Actor* actor)
-	{
-		if (!check(actor))
-			return;
-
-		ThreadHandler<ApplyPresetClass>::get_thread()->enqueue([actor, formID]() {
-			bool need3dreset = false;
-			bool needSkinReset = false;
-			ActorPreset preset{};
-
-			preset.actor = actor;
-
-			if (check_for_mcm_enable(actor, actor->GetSex() == RE::Actor::Male ? global::chance_bodyhair_male : global::chance_bodyhair_female)) {
-				if (apply_overlays(actor))
-					UpdateOverlaysForActor(actor);
-			}
-
-			std::this_thread::sleep_for(std::chrono::milliseconds(global::get_update_wait_time()));
-
-			if (apply_if_enabled(actor, actor->GetSex() == RE::Actor::Male ? global::chance_skin_male : global::chance_skin_female, [](RE::Actor* actor) {
-					return ApplyRandomBodyskin(actor);
-				})) {
-				needSkinReset = true;
-			}
-
-			if ((!global::is_ignore_hair_if_hat() || !IsHatEquipped(actor)) && (!global::is_only_if_vanilla_hair() || IsVanillaHair(actor))) {
-				if (apply_if_enabled(actor, actor->GetSex() == RE::Actor::Male ? global::chance_hair_male : global::chance_hair_female, [](RE::Actor* actor) {
-						return ApplyRandomHairStyle(actor);
-					})) {
-					need3dreset = true;
-				}
-			}
-
-			if (needSkinReset)
-				UpdateSkinForActor(actor);
-			else if (need3dreset)
-				UpdateHeadPartsForActor(actor);
-
-			if (apply_if_enabled(actor, actor->GetSex() == RE::Actor::Male ? global::chance_bodymorph_male : global::chance_bodymorph_female,
-					[](RE::Actor* actor) {
-						auto bm_preset = GetRandomBodyPreset(actor->GetSex(), BodyPreset::BodyType::NONE);
-						return bm_preset ? bm_preset->apply(actor) : false;
-					}))
-				UpdateBodyMorphsForActor(actor);
-		});
-	}
-
-	void ApplyRandomBodyMorphPreset(std::monostate, RE::Actor* actor, int type)
-	{
-		if (!check(actor))
-			return;
-
-		ThreadHandler<Bodymorph>::get_thread()->enqueue([actor, type]() {
-			auto preset = GetRandomBodyPreset(actor->GetSex(), GetTypeFromInt(type));
-			if (preset && preset->apply(actor)) {
-				UpdateBodyMorphsForActor(actor);
-			}
-		});
-	}
-
-	void ApplyRandomBodyHair(std::monostate, RE::Actor* actor)
-	{
-		if (!check(actor))
-			return;
-
-		ThreadHandler<Bodyhair>::get_thread()->enqueue([actor]() {
-			if (apply_overlays(actor))
-				UpdateOverlaysForActor(actor);
-		});
-	}
-
-	void ApplyRandomSkin(std::monostate, RE::Actor* actor)
-	{
-		if (!check(actor))
-			return;
-
-		ThreadHandler<Skin>::get_thread()->enqueue([actor]() {
-			if (ApplyRandomBodyskin(actor)) {
-				UpdateSkinForActor(actor);
-			}
-		});
+		if (p_preset && p_preset->body) {
+			bodymorphs::Get(*p_preset->body)->apply(actor);
+			LooksMenuInterfaces<BodyMorphInterface>::GetInterface()->UpdateMorphs(actor);
+		}
 	}
 
 	void ApplyRandomHair(std::monostate, RE::Actor* actor)
 	{
-		if (!check(actor))
+		auto npc = find_base(actor);
+		if (!npc)
 			return;
 
-		if (global::is_ignore_hair_if_hat() && IsHatEquipped(actor))
-			return;
-
-		ThreadHandler<HairStyle>::get_thread()->enqueue([actor]() {
-			if (!global::is_only_if_vanilla_hair() || !IsVanillaHair(actor)) {
-				if (ApplyRandomHairStyle(actor)) {
-					UpdateHeadPartsForActor(actor);
-				}
-			}
-		});
+		dbr_manager::ActorPreset preset;
+		auto p_preset = Find(actor);
+		auto hair_preset = hairs::GetRandom(actor);
+		if (!p_preset)
+		{
+			preset = dbr_manager::ActorPreset(actor, int{});
+			p_preset = &preset;
+			
+			if (hair_preset && hair_preset->hpart())
+				p_preset->hair = hair_preset->hpart();
+			if (p_preset->hair)
+				if (dbr_manager::ActorsManager::move_to_map(std::move(*p_preset)))
+					actor->Reset3D(false, RE::RESET_3D_FLAGS::kDiverseBodiesFlag, false, RE::RESET_3D_FLAGS::kNone);
+		} else {
+			if (hair_preset && hair_preset->hpart())
+				p_preset->hair = hair_preset->hpart();
+			if (p_preset->hair)
+				actor->Reset3D(false, RE::RESET_3D_FLAGS::kDiverseBodiesFlag, false, RE::RESET_3D_FLAGS::kNone);
+		}
 	}
 
-	bool IsVanillaForm(std::monostate, RE::TESForm* form)
+	void UpdateSettings(std::monostate)
 	{
-		return ::IsVanillaForm(form);
-	}
-
-	RE::BGSHeadPart* GetHairHeadPart(std::monostate, RE::Actor* actor)
-	{
-		return ::GetHairHeadPart(actor);
-	}
-
-	void ApplyBodyPresetFromFileForActor(std::monostate, RE::Actor* actor)
-	{
-		::ApplyBodyPresetFromFileForActor(actor);
+		iniSettings::getInstance().update();
 	}
 
 	inline bool RegisterFunctions(RE::BSScript::IVirtualMachine* a_VM)
 	{
-		PAPYRUS_BIND(Apply);
-		PAPYRUS_BIND(ApplyBodyPresetFromFileForActor);
-		PAPYRUS_BIND(ApplyRandomBodyMorphPreset);
-		PAPYRUS_BIND(ApplyRandomBodyHair);
-		PAPYRUS_BIND(ApplyRandomSkin);
+		PAPYRUS_BIND(IsSerializeFinished);
+		PAPYRUS_BIND(ApplyBodyPresetFromFile);
 		PAPYRUS_BIND(ApplyRandomHair);
-		PAPYRUS_BIND(IsVanillaForm);
-		PAPYRUS_BIND(GetHairHeadPart);
+		PAPYRUS_BIND(UpdateSettings);
 		return true;
 	}
 }

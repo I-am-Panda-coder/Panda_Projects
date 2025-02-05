@@ -3,7 +3,7 @@
 #include <DiverseBodiesRedux/Hooks/ProcessingSafe.h>
 
 extern bool extended_log;
-extern void (*g_OriginalReset3D)(RE::Actor*, bool, RE::RESET_3D_FLAGS, bool, RE::RESET_3D_FLAGS);
+//extern void (*g_OriginalReset3D)(RE::Actor*, bool, RE::RESET_3D_FLAGS, bool, RE::RESET_3D_FLAGS);
 extern ProcessingNPC g_processingReset;
 
 namespace dbr_manager
@@ -22,29 +22,51 @@ namespace dbr_manager
 				return RND(1, 99) < val;
 			};
 
+			auto& ini = iniSettings::getInstance();
+
 			// Проверка шанса на bodymorph
-			int bodyMorphChance = isFemale ? global::chance_bodymorph_female()->value : global::chance_bodymorph_male()->value;
+			int bodyMorphChance = isFemale ? ini.getBodyMorphFemaleChance() : ini.getBodyMorphMaleChance();
 			if (bodyMorphChance != 0 && (bodyMorphChance == 100 || RND(1, 99) < bodyMorphChance))
 				body = bodymorphs::GetRandom(actor)->name();
 
 			// Проверка шанса на bodyhair
-			int bodyHairChance = isFemale ? global::chance_bodyhair_female()->value : global::chance_bodyhair_male()->value;
+			int bodyHairChance = isFemale ? ini.getBodyHairFemaleChance() : ini.getBodyHairMaleChance();
 			if (bodyHairChance != 0 && (bodyHairChance == 100 || checkRND(bodyHairChance)))
 				overlays = overlays::Collection{ actor };
 
 			base = find_base(actor);
 
 			// Проверка шанса на skin
-			int skinChance = isFemale ? global::chance_skin_female()->value : global::chance_skin_male()->value;
+			int skinChance = isFemale ? ini.getSkinFemaleChance() : ini.getSkinMaleChance();
 			if (base && skinChance != 0 && (skinChance == 100 || checkRND(skinChance)))
 				skin = skins::GetRandom(actor)->name();
 
 			// Проверка шанса на hair
-			int hairChance = isFemale ? global::chance_hair_female()->value : global::chance_hair_male()->value;
+			int hairChance = isFemale ? ini.getHairFemaleChance() : ini.getHairMaleChance();
 			if (base && hairChance != 0 && (hairChance == 100 || checkRND(hairChance)))
 				hair = hairs::GetRandom(actor)->hpart();
+			
+			this->actor = actor;
 		}
-		this->actor = actor;
+		
+	}
+
+	ActorPreset::ActorPreset(RE::Actor* actor, int)
+	{
+		if (!actor || !RE::fallout_cast<RE::Actor*>(actor))
+			return;
+
+		if (global::is_qualified_race(actor)) {
+			auto RND = utils::RandomGenerator{};
+			bool isFemale = actor->GetSex() == RE::Actor::Sex::Female;
+
+			auto checkRND = [&RND](int val) -> bool {
+				RND.update_seed();
+				return RND(1, 99) < val;
+			};
+
+			this->actor = actor;
+		}
 	}
 
 	ActorPreset::ActorPreset(boost::json::value& obj)
@@ -80,7 +102,8 @@ namespace dbr_manager
 					a_queueReset ? "true" : "false",
 					std::to_string(static_cast<uint16_t>(a_excludeFlags)));
 
-			g_OriginalReset3D(actor, a_reloadAll, a_additionalFlags, a_queueReset, a_excludeFlags);
+			//g_OriginalReset3D(actor, a_reloadAll, a_additionalFlags, a_queueReset, a_excludeFlags);
+			actor->Reset3D(a_reloadAll, a_additionalFlags, a_queueReset, a_excludeFlags);
 
 			while (base && g_processingReset.contains(base->formID))
 				std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -150,6 +173,11 @@ namespace dbr_manager
 		}
 
 		return true;
+	}
+
+	bool ActorPreset::update() const
+	{
+		return apply();
 	}
 
 	boost::json::object ActorPreset::serialize() const

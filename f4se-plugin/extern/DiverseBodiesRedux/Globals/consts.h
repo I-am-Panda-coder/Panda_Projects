@@ -11,20 +11,20 @@ const uint32_t formid_kwd_excluded = 0x002;
 //mgef
 const uint32_t formid_mgef_diverse = 0x014;
 //global variables
-const uint32_t formid_gv_bool_ignore_excluded = 0x10;
-const uint32_t formid_gv_bool_ignore_diversed = 0x12;
-const uint32_t formid_gv_int_chance_bodymorph_male = 0x16;
-const uint32_t formid_gv_int_chance_bodymorph_female = 0x1C;
-const uint32_t formid_gv_int_chance_bodyhair_male = 0x1D;
-const uint32_t formid_gv_int_chance_bodyhair_female = 0x1E;
-const uint32_t formid_gv_int_chance_skin_male = 0x1F;
-const uint32_t formid_gv_int_chance_skin_female = 0x20;
-const uint32_t formid_gv_int_chance_hair_male = 0x2B;
-const uint32_t formid_gv_int_chance_hair_female = 0x30;
-const uint32_t formid_gv_bool_ignore_if_hat_equipped = 0x566;
-const uint32_t formid_gv_int_performance = 0x567;
-const uint32_t formid_gv_bool_only_if_vanilla_hair = 0x569;
-const float formid_gv_float_body_update_cooling_time = 0xC51;
+//const uint32_t formid_gv_bool_ignore_excluded = 0x10;
+//const uint32_t formid_gv_bool_ignore_diversed = 0x12;
+//const uint32_t formid_gv_int_chance_bodymorph_male = 0x16;
+//const uint32_t formid_gv_int_chance_bodymorph_female = 0x1C;
+//const uint32_t formid_gv_int_chance_bodyhair_male = 0x1D;
+//const uint32_t formid_gv_int_chance_bodyhair_female = 0x1E;
+//const uint32_t formid_gv_int_chance_skin_male = 0x1F;
+//const uint32_t formid_gv_int_chance_skin_female = 0x20;
+//const uint32_t formid_gv_int_chance_hair_male = 0x2B;
+//const uint32_t formid_gv_int_chance_hair_female = 0x30;
+//const uint32_t formid_gv_bool_ignore_if_hat_equipped = 0x566;
+//const uint32_t formid_gv_int_performance = 0x567;
+//const uint32_t formid_gv_bool_only_if_vanilla_hair = 0x569;
+//const float formid_gv_float_body_update_cooling_time = 0xC51;
 
 //formlist
 const uint32_t formid_flst_excluded_npc = 0x734;

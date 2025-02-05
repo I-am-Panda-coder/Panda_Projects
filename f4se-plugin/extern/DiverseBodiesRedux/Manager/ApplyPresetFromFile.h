@@ -6,4 +6,4 @@
 namespace logger = F4SE::log;
 using namespace std::literals;
 
-void ApplyBodyPresetFromFileForActor(RE::Actor* actor);
+std::string ApplyBodyPresetFromFileForActor(RE::Actor* actor);

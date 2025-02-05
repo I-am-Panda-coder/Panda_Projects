@@ -20,6 +20,7 @@
 //#include <PCH.h>
 #include <DiverseBodiesRedux/Version.h>
 #include <DiverseBodiesRedux/Manager/Manager.h>
+#include <DiverseBodiesRedux/Papyrus/PapyrusBind.hpp>
 
 
 #define DLLEXPORT __declspec(dllexport)
@@ -133,13 +134,13 @@ extern "C" DLLEXPORT bool F4SEAPI F4SEPlugin_Load(const F4SE::LoadInterface* a_f
 		InitAfterGameWasStarted();
 	}
 
-	/*const auto papyrus = F4SE::GetPapyrusInterface();*/
+	const auto papyrus = F4SE::GetPapyrusInterface();
 	
-	/*if (!papyrus || !papyrus->Register(papyrus::RegisterFunctions)) {
+	if (!papyrus || !papyrus->Register(papyrus::RegisterFunctions)) {
 		logger::critical("Failed to register Papyrus functions!");
 	} else {
 		logger::info("Registered Papyrus functions.");
-	}*/
+	}
 
 	return true;
 }

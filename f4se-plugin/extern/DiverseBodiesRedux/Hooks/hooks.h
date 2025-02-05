@@ -32,7 +32,7 @@ void SetupDetours(ActorUpdateManager* manager);
 
 using TESObjectLoadedEventHandler = RE::BSEventNotifyControl (*)(ActorUpdateManager*, RE::TESObjectLoadedEvent*, void*);
 using TESInitScriptEventHandler = RE::BSEventNotifyControl (*)(ActorUpdateManager*, RE::TESInitScriptEvent*, void*);
-using Reset3DHandler = void (*)(RE::Actor*, bool, RE::RESET_3D_FLAGS, bool, RE::RESET_3D_FLAGS);
+//using Reset3DHandler = void (*)(RE::Actor*, bool, RE::RESET_3D_FLAGS, bool, RE::RESET_3D_FLAGS);
 using ChangeHeadPartHandler = void (*)(RE::TESNPC*, RE::BGSHeadPart*);
 using ChangeHeadPartRemovePartHandler = void (*)(RE::TESNPC*, RE::BGSHeadPart*, bool);
 //using Update3DModelHandler = void (*)(RE::AIProcess*, RE::Actor*, RE::TESObjectREFR*, bool);
@@ -41,7 +41,7 @@ using DoUpdate3DModelHandler = void(*)(RE::AIProcess*, RE::Actor*, RE::RESET_3D_
 
 RE::BSEventNotifyControl HookedReceiveEventObjectLoaded(ActorUpdateManager*, RE::TESObjectLoadedEvent*, void*);
 RE::BSEventNotifyControl HookedReceiveEventInitScript(ActorUpdateManager*, RE::TESInitScriptEvent*, void*);
-void HookedReset3D(RE::Actor*, bool, RE::RESET_3D_FLAGS, bool, RE::RESET_3D_FLAGS);
+//void HookedReset3D(RE::Actor*, bool, RE::RESET_3D_FLAGS, bool, RE::RESET_3D_FLAGS);
 void ProcessChangeHeadPart(RE::TESNPC*, RE::BGSHeadPart*, bool, bool);
 void HookedChangeHeadPartRemovePart(RE::TESNPC*, RE::BGSHeadPart*, bool);
 void HookedChangeHeadPart(RE::TESNPC*, RE::BGSHeadPart*);
