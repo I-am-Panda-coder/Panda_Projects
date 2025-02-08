@@ -648,8 +648,7 @@ bool XMLfile::normalize()
 	return hasValue;
 }
 
-void XMLfile::send_
-ing(std::string_view warn)
+void XMLfile::send_warning(std::string_view warn)
 {
 	LOG("File : {}, warn : {}", source.filename().string(), warn);
 }

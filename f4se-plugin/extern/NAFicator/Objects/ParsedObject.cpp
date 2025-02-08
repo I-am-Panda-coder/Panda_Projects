@@ -138,11 +138,23 @@ namespace NAFicator
 		if (it == parsed_objects.end()) {
 			parsed_objects.insert(std::make_pair(pair, std::make_pair(RE::BSSpinLock(), ele)));
 		} else {
+			if (!ele->is_valid())
+				return;
 			auto& [l, ptr] = it->second;
 			// Проверяем валидность указателя
 			if (!ptr->is_valid() && ele->is_valid()) {
 				RE::BSAutoLock lock(l);
 				ptr = ele;
+			} else if (ptr && ele->type == kTag) {
+				auto ptr_ele = static_cast<Tag*>(ele.get());
+				auto ptr_tag = static_cast<Tag*>(ptr.get());
+				RE::BSAutoLock lock(l);
+				if (ptr_ele->replace) {
+					if (ptr_tag->get_priority() < ptr_ele->get_priority())
+						*ptr_tag = *ptr_ele;
+				} else {
+					ptr_tag->merge_tags(*ptr_ele);
+				}
 			} else if (ptr && ele->type == kFurniture) {
 				// Обработка для типа kFurniture
 				auto f_ptr = static_cast<Furniture*>(ptr.get());

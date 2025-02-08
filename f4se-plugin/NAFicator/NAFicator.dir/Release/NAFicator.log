@@ -1,25 +1,9 @@
-﻿  Form.cpp
-  NAFicate.cpp
-  NAFicator_main.cpp
-  Action.cpp
-  Animation.cpp
-  AnimationGroup.cpp
-  ConditionSet.cpp
-  EquipmentSet.cpp
-  Furniture.cpp
-  MfgSet.cpp
-  MorphSet.cpp
-  Overlay.cpp
-  ParsedObject.cpp
-  Position.cpp
-  PositionTree.cpp
-  ProtectedEquipment.cpp
-  Race.cpp
-  Tag.cpp
-  ThreadPool.cpp
+﻿  NAFicator_main.cpp
+  XMLFile.cpp
      Создается библиотека E:\Games\Fallout 4\MO2\mods\NAFicator\F4SE\Plugins\NAFicator.lib и объект E:\Games\Fallout 4\MO2\mods\NAFicator\F4SE\Plugins\NAFicator.exp
   Создание кода
-  Compiler switch has changed, fall back to full compilation.
-  All 10227 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  140 of 10252 functions ( 1.4%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    96 functions had inline decision re-evaluated but remain unchanged
   Создание кода завершено
   NAFicator.vcxproj -> E:\Games\Fallout 4\MO2\mods\NAFicator\F4SE\Plugins\NAFicator.dll
