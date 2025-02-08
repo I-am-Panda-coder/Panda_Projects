@@ -1,7 +1,6 @@
 #include "hooks.h"
 #include "DiverseBodiesRedux/Manager/ManagerActorPreset.h"
 
-extern bool extended_log;
 extern bool IsSerializeFinished();
 extern bool IsInActorsMap(uint32_t actorId);
 extern bool IsInActorsMap(RE::Actor* actor);
@@ -10,7 +9,7 @@ extern std::optional<bool> IsActorExcluded(RE::Actor* actor);
 
 extern concurrency::concurrent_queue<std::pair<uint32_t, void*>> looksmenu_hooked_queue;
 
-ProcessingNPC g_processingReset{};
+//ProcessingNPC g_processingReset{};
 ProcessingNPC g_processingChangeHeadParts{};
 
 TESObjectLoadedEventHandler g_OriginalReceiveEventObjectLoaded = nullptr;
@@ -132,6 +131,16 @@ void HookedDoUpdate3DModel(RE::AIProcess* process, RE::Actor* actor, RE::RESET_3
 	//}
 }
 
+void remove_with_extra(RE::TESNPC* npc, RE::BGSHeadPart* hpart) {
+	for (auto& extra : hpart->extraParts) {
+		if (!extra->extraParts.empty())
+			remove_with_extra(npc, extra);
+		else
+			g_OriginalChangeHeadPartRemovePart(npc, extra, false);
+	}
+	g_OriginalChangeHeadPartRemovePart(npc, hpart, false);
+}
+
 void ProcessChangeHeadPart(RE::TESNPC* npc, RE::BGSHeadPart* hpart, bool bRemoveExtraParts, bool isRemove)
 {
 	if (!npc || !hpart)
@@ -141,21 +150,28 @@ void ProcessChangeHeadPart(RE::TESNPC* npc, RE::BGSHeadPart* hpart, bool bRemove
 	npc = base_npc ? base_npc : npc;
 
 	if (g_processingChangeHeadParts.contains(npc->formID)) {
-		std::thread([=] {
+		std::thread([npc, hpart, bRemoveExtraParts, isRemove] {
 			while (g_processingChangeHeadParts.contains(npc->formID)) {
 				std::this_thread::sleep_for(std::chrono::microseconds(1));
 			}
 			ProcessChangeHeadPart(npc, hpart, bRemoveExtraParts, isRemove);
 		}).detach();
-	} else {
-		g_processingChangeHeadParts.insert(npc->formID);
-		if (isRemove) {
-			g_OriginalChangeHeadPartRemovePart(npc, hpart, bRemoveExtraParts);
-		} else {
-			g_OriginalChangeHeadPart(npc, hpart);
-		}
-		g_processingChangeHeadParts.erase(npc->formID);
+		return;
 	}
+
+	g_processingChangeHeadParts.insert(npc->formID);
+
+	if (isRemove) {
+		if (bRemoveExtraParts)
+			remove_with_extra(npc, hpart);
+		else
+			g_OriginalChangeHeadPartRemovePart(npc, hpart, false);
+
+	} else {
+		g_OriginalChangeHeadPart(npc, hpart);
+	}
+
+	g_processingChangeHeadParts.erase(npc->formID);
 }
 
 void HookedChangeHeadPartRemovePart(RE::TESNPC* npc, RE::BGSHeadPart* hpart, bool bRemoveExtraParts)

@@ -34,10 +34,11 @@ class iniSettings
 	int i_skin_female_chance{0};
 	int i_hair_male_chance{0};
 	int i_hair_female_chance{0};
-	bool b_if_hat_equipped{};
+	bool b_skip_if_hat_equipped{};
 	bool b_only_if_vanilla_hair{ true };
 	int i_performance{10};
 	int i_delay_timer{5};
+	bool b_extended_log{};
 
 	iniSettings();
 	void loadSettings();
@@ -63,10 +64,11 @@ class iniSettings
 	inline int getSkinFemaleChance() const { return i_skin_female_chance; }
 	inline int getHairMaleChance() const { return i_hair_male_chance; }
 	inline int getHairFemaleChance() const { return i_hair_female_chance; }
-	inline bool isHatEquipped() const { return b_if_hat_equipped; }
-	inline bool isOnlyIfVanillaHair() const { return b_only_if_vanilla_hair; }
+	inline bool getSkipIfHatEquipped() const { return b_skip_if_hat_equipped; }
+	inline bool getIsOnlyIfVanillaHair() const { return b_only_if_vanilla_hair; }
 	inline int getPerformance() const { return i_performance; }
 	inline int getDelayTimer() const { return i_delay_timer; }
+	inline bool getExtendedLogs() const { return b_extended_log; }
 };
 
 class global

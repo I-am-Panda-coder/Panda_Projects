@@ -30,8 +30,6 @@ using namespace std::literals;
 
 ini::map inimap(std::filesystem::current_path().string() + "\\Data\\DiverseBodiesRedux\\dbr.ini"s);
 
-bool extended_log = true;
-
 void InitAfterGameDataWasLoaded();
 void InitAfterGameWasStarted();
 void InitForms();

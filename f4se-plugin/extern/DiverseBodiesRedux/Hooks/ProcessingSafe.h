@@ -4,7 +4,7 @@
 #include <functional>
 #include <iterator>
 #include <memory>
-#include <mutex>  // Для std::scoped_lock
+#include <mutex>
 #include <optional>
 #include <shared_mutex>
 #include <unordered_set>
@@ -17,7 +17,7 @@ public:
 
 private:
 	std::unique_ptr<map> ptr_map;
-	mutable std::shared_mutex mutex;  // Используем shared_mutex для разделения доступа на чтение и запись
+	mutable std::shared_mutex mutex;
 
 	// Запрет копирования и перемещения
 	ProcessingNPC(const ProcessingNPC&) = delete;
@@ -36,10 +36,8 @@ public:
 	size_t size() const;
 	bool empty() const;
 
-	// Безопасный метод для поиска элемента
 	std::optional<uint32_t> find(uint32_t key) const;
 
-	// Прокси-итератор для безопасного обхода
 	class SafeIterator
 	{
 	public:

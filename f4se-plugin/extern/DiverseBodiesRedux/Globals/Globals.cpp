@@ -22,7 +22,7 @@ iniSettings::iniSettings(iniSettings&& other) noexcept
 	i_skin_female_chance(other.i_skin_female_chance),
 	i_hair_male_chance(other.i_hair_male_chance),
 	i_hair_female_chance(other.i_hair_female_chance),
-	b_if_hat_equipped(other.b_if_hat_equipped),
+	b_skip_if_hat_equipped(other.b_skip_if_hat_equipped),
 	b_only_if_vanilla_hair(other.b_only_if_vanilla_hair),
 	i_performance(other.i_performance),
 	i_delay_timer(other.i_delay_timer)
@@ -41,7 +41,7 @@ iniSettings& iniSettings::operator=(iniSettings&& other) noexcept
 		i_skin_female_chance = other.i_skin_female_chance;
 		i_hair_male_chance = other.i_hair_male_chance;
 		i_hair_female_chance = other.i_hair_female_chance;
-		b_if_hat_equipped = other.b_if_hat_equipped;
+		b_skip_if_hat_equipped = other.b_skip_if_hat_equipped;
 		b_only_if_vanilla_hair = other.b_only_if_vanilla_hair;
 		i_performance = other.i_performance;
 		i_delay_timer = other.i_delay_timer;
@@ -79,10 +79,11 @@ iniSettings& iniSettings::operator=(iniSettings&& other) noexcept
 	tryLoadFromFile(i_skin_female_chance, "i_skin_female_chance", "settings");
 	tryLoadFromFile(i_hair_male_chance, "i_hair_male_chance", "settings");
 	tryLoadFromFile(i_hair_female_chance, "i_hair_female_chance", "settings");
-	tryLoadFromFile(b_if_hat_equipped, "b_if_hat_equipped", "settings");
+	tryLoadFromFile(b_skip_if_hat_equipped, "b_if_hat_equipped", "settings");
 	tryLoadFromFile(b_only_if_vanilla_hair, "b_only_if_vanilla_hair", "settings");
 	tryLoadFromFile(i_performance, "i_performance", "settings");
 	tryLoadFromFile(i_delay_timer, "i_delay_timer", "settings");
+	tryLoadFromFile(b_extended_log, "b_extended_log", "debug");
 }
 
  iniSettings& iniSettings::getInstance()

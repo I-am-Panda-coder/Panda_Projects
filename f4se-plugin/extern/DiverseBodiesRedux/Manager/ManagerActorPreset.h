@@ -1,5 +1,6 @@
 #pragma once
 #include "DiverseBodiesRedux/Parser/Diversers.h"
+#include "DiverseBodiesRedux/Globals/Globals.h"
 
 namespace logger = F4SE::log;
 

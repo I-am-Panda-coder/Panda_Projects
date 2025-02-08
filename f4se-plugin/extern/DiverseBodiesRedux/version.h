@@ -8,7 +8,7 @@ namespace ver
 {
 	inline constexpr std::size_t MAJOR = 0;
 	inline constexpr std::size_t MINOR = 1;
-	inline constexpr std::size_t PATCH = 0;
+	inline constexpr std::size_t PATCH = 2;
 
 	// Функция для вычисления версии в формате INT
 	inline constexpr uint32_t computeVersionInt(std::size_t major, std::size_t minor, std::size_t patch)

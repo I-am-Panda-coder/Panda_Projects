@@ -622,6 +622,10 @@ namespace overlays
 	void Parse()
 	{	
 		Preset::ValidOverlays = GetValid();
+
+		if (Preset::ValidOverlays.empty()) {
+			return;
+		}
 		
 		std::filesystem::path folder;
 		try {
@@ -787,6 +791,8 @@ namespace overlays
 	{
 		logger::info("{}", vo);
 	}*/
+		if (!ValidOverlays.size())
+			logger::warn("Failed to parse valid overlays : no overlays in folder!");
 
 		return ValidOverlays;
 	}

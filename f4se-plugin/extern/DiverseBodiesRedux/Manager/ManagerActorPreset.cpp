@@ -2,7 +2,6 @@
 #include <zlib.h>
 #include <DiverseBodiesRedux/Hooks/ProcessingSafe.h>
 
-extern bool extended_log;
 //extern void (*g_OriginalReset3D)(RE::Actor*, bool, RE::RESET_3D_FLAGS, bool, RE::RESET_3D_FLAGS);
 extern ProcessingNPC g_processingReset;
 
@@ -26,25 +25,31 @@ namespace dbr_manager
 
 			// Проверка шанса на bodymorph
 			int bodyMorphChance = isFemale ? ini.getBodyMorphFemaleChance() : ini.getBodyMorphMaleChance();
-			if (bodyMorphChance != 0 && (bodyMorphChance == 100 || RND(1, 99) < bodyMorphChance))
-				body = bodymorphs::GetRandom(actor)->name();
+			if (bodyMorphChance != 0 && (bodyMorphChance == 100 || RND(1, 99) < bodyMorphChance)) {
+				if (auto rnd = bodymorphs::GetRandom(actor); rnd)
+					body = rnd->name();
+			}
 
 			// Проверка шанса на bodyhair
 			int bodyHairChance = isFemale ? ini.getBodyHairFemaleChance() : ini.getBodyHairMaleChance();
-			if (bodyHairChance != 0 && (bodyHairChance == 100 || checkRND(bodyHairChance)))
-				overlays = overlays::Collection{ actor };
+			if (bodyHairChance != 0 && (bodyHairChance == 100 || checkRND(bodyHairChance))) {
+				if (auto col = overlays::Collection{ actor }; !col.empty())
+				overlays = col;
+			}
 
 			base = find_base(actor);
 
 			// Проверка шанса на skin
 			int skinChance = isFemale ? ini.getSkinFemaleChance() : ini.getSkinMaleChance();
 			if (base && skinChance != 0 && (skinChance == 100 || checkRND(skinChance)))
-				skin = skins::GetRandom(actor)->name();
+				if (auto rnd = skins::GetRandom(actor); rnd)
+					skin = rnd->name();
 
 			// Проверка шанса на hair
 			int hairChance = isFemale ? ini.getHairFemaleChance() : ini.getHairMaleChance();
 			if (base && hairChance != 0 && (hairChance == 100 || checkRND(hairChance)))
-				hair = hairs::GetRandom(actor)->hpart();
+				if (auto rnd = hairs::GetRandom(actor); rnd)
+					hair = rnd->hpart();
 			
 			this->actor = actor;
 		}
@@ -95,7 +100,7 @@ namespace dbr_manager
 			a_excludeFlags &= get_rflags();
 			a_queueReset = false;
 
-			if (extended_log)
+			if (iniSettings::getInstance().getExtendedLogs())
 				logger::info("{:x} : Apply Reset 3d ({}, {}, {}, {}", actor->formID,
 					a_reloadAll ? "true" : "false",
 					std::to_string(static_cast<uint16_t>(a_additionalFlags)),
@@ -105,26 +110,26 @@ namespace dbr_manager
 			//g_OriginalReset3D(actor, a_reloadAll, a_additionalFlags, a_queueReset, a_excludeFlags);
 			actor->Reset3D(a_reloadAll, a_additionalFlags, a_queueReset, a_excludeFlags);
 
-			while (base && g_processingReset.contains(base->formID))
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			/*while (base && g_processingReset.contains(base->formID))
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));*/
 		};
 		
 		if (!actor || empty())
 			return false;
 		
-		if (extended_log)
+		if (iniSettings::getInstance().getExtendedLogs())
 			logger::info("Apply preset for {}->{:x}", actor->GetDisplayFullName(), actor->formID);
 
 		if (body) {
 			if (auto bp = bodymorphs::Get(*body); bp) {
-				if (extended_log)
+				if (iniSettings::getInstance().getExtendedLogs())
 					logger::info("{:x} : Apply body : {}", actor->formID, bp->name());
 				bp->apply(actor);
 			}
 		}
 
 		if (overlays) {
-			if (extended_log) {
+			if (iniSettings::getInstance().getExtendedLogs()) {
 				std::string overlays_str{ "" };
 				bool first = true;
 				for (auto& o : overlays->overlays) {
@@ -143,13 +148,15 @@ namespace dbr_manager
 			std::lock_guard l{ m };
 
 			if (skin) {
-				if (extended_log)
+				if (iniSettings::getInstance().getExtendedLogs())
 					logger::info("{:x} : Apply skin : {}", actor->formID, *skin);
 				LooksMenuInterfaces<SkinInterface>::GetInterface()->AddSkinOverride(actor, *skin, actor->GetSex() == RE::Actor::Sex::Female);
 			}
 
-			if (hair) {
-				if (extended_log)
+			auto& ini = iniSettings::getInstance();
+
+			if (hair && (!ini.getIsOnlyIfVanillaHair() || !IsVanillaHair(actor)) && (!ini.getSkipIfHatEquipped() || !IsHatEquipped(actor))) {
+				if (iniSettings::getInstance().getExtendedLogs())
 					logger::info("{:x} : Apply hair : {}", actor->formID, (*hair)->GetFormEditorID());
 				hairs::Preset::apply(base, *hair);
 			}
@@ -157,9 +164,9 @@ namespace dbr_manager
 			if (reset && actor->GetFullyLoaded3D() && actor->currentProcess) {
 				reset_actor();
 			} else {
-				if (base)
-					g_processingReset.erase(base->formID);
-				if (extended_log) 
+				/*if (base)
+					g_processingReset.erase(base->formID);*/
+				if (iniSettings::getInstance().getExtendedLogs()) 
 					logger::info("{:x} : can't reset 3d, actor not loaded!", actor->formID);
 			}
 		} else {
@@ -167,7 +174,7 @@ namespace dbr_manager
 			if (reset && actor->GetFullyLoaded3D() && actor->currentProcess) {
 				reset_actor();
 			} else {	
-				if (extended_log) 
+				if (iniSettings::getInstance().getExtendedLogs()) 
 					logger::info("{:x} : can't reset 3d, actor not loaded!", actor->formID);
 			}
 		}
@@ -317,7 +324,7 @@ namespace dbr_manager
 	{
 		auto f = f3D::kNone;
 		if (hair) {
-			if (extended_log)
+			if (iniSettings::getInstance().getExtendedLogs())
 				logger::info("{:x} : Apply hair : {}", actor->formID, (*hair)->GetFormEditorID());
 			hairs::Preset::apply(base, *hair);
 

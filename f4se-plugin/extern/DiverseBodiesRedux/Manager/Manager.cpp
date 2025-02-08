@@ -9,7 +9,6 @@
 
 using f3D = RE::RESET_3D_FLAGS;
 
-extern bool extended_log;
 extern TESObjectLoadedEventHandler g_OriginalReceiveEventObjectLoaded;
 concurrency::concurrent_queue<std::pair<uint32_t, void*>> looksmenu_hooked_queue;
 
@@ -20,7 +19,7 @@ namespace dbr_manager
 		if (actor) {
 			if (auto it = actors_map.find(actor->formID); it == actors_map.end()) {
 				if (move_to_map(ActorPreset(actor))) {
-					if (extended_log) {
+					if (iniSettings::getInstance().getExtendedLogs()) {
 						logger::info("Add to map {}->{}", actor->GetDisplayFullName(), std::format("{:x}", actor->formID));
 					}
 					actor->Reset3D(false, RE::RESET_3D_FLAGS::kDiverseBodiesFlag, false, RE::RESET_3D_FLAGS::kNone);
@@ -59,7 +58,7 @@ namespace dbr_manager
 		if (a_event.loaded) {
 			RE::Actor* ref = GetFormByFormID<RE::Actor>(a_event.formId);
 			if (global::is_qualified_race(ref)) {
-				if (ref && extended_log)
+				if (ref && iniSettings::getInstance().getExtendedLogs())
 					logger::info("OnLoad event Hooked LooksMenu for actor {}", std::format("{:x}", ref->formID));
 				if (ref) {
 					if (!IsSerializeFinished()) {
@@ -203,7 +202,7 @@ namespace dbr_manager
 			return false;
 
 		//if (preset->actor->GetFullyLoaded3D()) {
-		if (extended_log)
+		if (iniSettings::getInstance().getExtendedLogs())
 			logger::info("Apply preset for {}->{}", preset->actor->GetDisplayFullName(), std::format("{:x}", preset->actor->formID));
 
 		preset->apply();
@@ -225,7 +224,7 @@ namespace dbr_manager
 
 	void ActorsManager::Serialize(const F4SE::SerializationInterface* a_intfc)
 	{
-		if (extended_log)
+		if (iniSettings::getInstance().getExtendedLogs())
 			logger::info("Serialize started");
 		auto l{ lock };  // Lock the mutex
 		if (a_intfc && a_intfc->OpenRecord(ver::UID, serialization_ver)) {
@@ -243,7 +242,7 @@ namespace dbr_manager
 			uLongf compressedSize = compressBound(serializedData.size());
 			std::vector<Bytef> compressedData(compressedSize);
 
-			if (extended_log)
+			if (iniSettings::getInstance().getExtendedLogs())
 				logger::info("Data to serialize : {}", serializedData);
 
 			// Сжимаем данные
@@ -276,22 +275,22 @@ namespace dbr_manager
 			delete[] buf;*/
 
 			 // Записываем сжатые данные в интерфейс
-			if (extended_log)
+			if (iniSettings::getInstance().getExtendedLogs())
 				logger::info("Try to write serialized data...");
 			if (!a_intfc->WriteRecordData(compressedData.data(), compressedData.size())) {
-				if (extended_log)
+				if (iniSettings::getInstance().getExtendedLogs())
 					logger::info("Serialize failed");
 				logger::warn("Failed to write all compressed data to the interface.");
 			}
 		}
-		if (extended_log)
+		if (iniSettings::getInstance().getExtendedLogs())
 			logger::info("Serialize success");
 
 	}
 
 	void ActorsManager::Deserialize(const F4SE::SerializationInterface* a_intfc)
 	{
-		if (extended_log)
+		if (iniSettings::getInstance().getExtendedLogs())
 			logger::info("Deserialize started");
 		actors_map.clear();
 		uint32_t fullSize{};
@@ -394,7 +393,7 @@ namespace dbr_manager
 			return;
 		}
 
-		if (extended_log)
+		if (iniSettings::getInstance().getExtendedLogs())
 			logger::info("Deserialize decompressed data : {}", decompressedData);
 
 		// Обрабатываем разжатые данные как JSON
@@ -426,7 +425,7 @@ namespace dbr_manager
 			deserialized = true;
 			return;
 		}
-		if (extended_log)
+		if (iniSettings::getInstance().getExtendedLogs())
 			logger::info("Deserialize function finished (but deserialization runs in thread still)");
 	}
 

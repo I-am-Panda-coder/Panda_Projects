@@ -131,7 +131,7 @@
       <FloatingPointModel>Strict</FloatingPointModel>
       <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
       <DisableSpecificWarnings>4324;4102;4305;4201;4309;4200;4068;4267;4244;4101;4459</DisableSpecificWarnings>
-      <Optimization>Disabled</Optimization>
+      <Optimization>MaxSpeed</Optimization>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
