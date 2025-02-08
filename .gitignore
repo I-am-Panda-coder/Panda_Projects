@@ -3,3 +3,6 @@ build/
 .vs/
 /ck/package/
 *.pex
+/f4se-plugin/AddMagicEffect/AddMagicEffect.vcxproj
+/f4se-plugin/AddMagicEffect/AddMagicEffect.vcxproj.filters
+/f4se-plugin/AddMagicEffect
