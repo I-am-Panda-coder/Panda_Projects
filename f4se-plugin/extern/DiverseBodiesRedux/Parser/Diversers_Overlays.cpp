@@ -641,25 +641,30 @@ namespace overlays
 			return;
 		}
 		std::stack<std::string> fault;
+		std::error_code error{};
 
 		for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-			if (!entry.is_directory() && entry.path().extension() == ".json") {
-				boost::json::value json;
-				try {
-					json = boost::json::parse(get_json(entry.path()));
-				} catch (...) {
-					fault.push(entry.path().filename().string());
-					continue;
-				}
-				auto end = json.as_object().end();
-				if (auto start = json.as_object().find("presets_array"); start != end && start->value().is_array()) {
-					for (auto& val : start->value().as_array()) {
-						Preset tmp(val);
-						if (!tmp.empty()) {
-							Preset::MAP.emplace(tmp.name(), std::move(tmp));
+			if (entry.exists(error)) {
+				if (!entry.is_directory() && entry.path().extension() == ".json") {
+					boost::json::value json;
+					try {
+						json = boost::json::parse(get_json(entry.path()));
+					} catch (...) {
+						fault.push(entry.path().filename().string());
+						continue;
+					}
+					auto end = json.as_object().end();
+					if (auto start = json.as_object().find("presets_array"); start != end && start->value().is_array()) {
+						for (auto& val : start->value().as_array()) {
+							Preset tmp(val);
+							if (!tmp.empty()) {
+								Preset::MAP.emplace(tmp.name(), std::move(tmp));
+							}
 						}
 					}
 				}
+			} else {
+				fault.emplace("Failed to read file " + entry.path().string() + " : " + (error.value() ? error.message() : ""));
 			}
 		}
 
@@ -679,8 +684,7 @@ namespace overlays
 		if (!ValidOverlays.empty())
 			return ValidOverlays;
 
-		auto ParseOverlayJSON = [](const std::filesystem::path& path) -> bool
-		{
+		auto ParseOverlayJSON = [](const std::filesystem::path& path) -> bool {
 			auto result = false;
 			if (path.extension() == ".json") {
 				boost::json::value json_value;
@@ -688,8 +692,7 @@ namespace overlays
 					std::string json_string;
 					try {
 						json_string = get_json(path);
-					}
-					catch (std::runtime_error e) {
+					} catch (std::runtime_error e) {
 						logger::error("Failed parse ValidOverlays {} : {}", path.string(), e.what());
 						return false;
 					}
@@ -749,7 +752,7 @@ namespace overlays
 			}
 			return result;
 		};
-		
+
 		std::filesystem::path folder;
 		try {
 			folder = std::filesystem::current_path() / "Data" / "F4SE" / "Plugins" / "F4EE" / "Overlays";
@@ -765,16 +768,24 @@ namespace overlays
 		}
 		std::stack<std::string> fault;
 
+		std::error_code error{};
+
 		for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-			if (entry.is_directory()) {
+			if (entry.exists(error) && entry.is_directory(error)) {
 				for (auto file : std::filesystem::directory_iterator(entry.path())) {
-					if (file.path().filename() == "overlays.json") {
-						if (!ParseOverlayJSON(file.path()))
+					if (file.exists(error))
+						if (file.path().filename() == "overlays.json") {
+							if (!ParseOverlayJSON(file.path()))
+								fault.push(file.path().string());
+						} else {
 							fault.push(file.path().string());
-					} else {
-						fault.push(file.path().string());
+						}
+					else {
+						fault.emplace("Failed to iterate directory " + file.path().string() + " : " + error.message());
 					}
 				}
+			} else {
+				fault.emplace("Failed to iterate directory " + folder.string() + " : " + error.message());
 			}
 		}
 

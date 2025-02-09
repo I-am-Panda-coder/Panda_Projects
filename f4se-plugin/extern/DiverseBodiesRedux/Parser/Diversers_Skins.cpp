@@ -7,10 +7,10 @@ namespace skins
 		std::filesystem::path folder;
 		try {
 			folder = std::filesystem::current_path() / "Data" / "F4SE" / "Plugins" / "F4EE" / "Skin";
-		} catch (std::bad_alloc e) {
+		} catch (std::bad_alloc& e) {
 			logger::error("Failed open file {} : {}", folder.string(), e.what());
 			return;
-		} catch (std::runtime_error e) {
+		} catch (std::runtime_error& e) {
 			logger::error("Failed open file {} : {}", folder.string(), e.what());
 			return;
 		} catch (...) {
@@ -19,33 +19,39 @@ namespace skins
 		}
 
 		std::stack<std::string> fault;
+		std::error_code error{};
 
 		for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-			if (entry.is_directory()) {
+			if (entry.exists(error) && entry.is_directory(error)) {
 				for (auto file : std::filesystem::directory_iterator(entry.path())) {
-					if (file.path().filename() == "skin.json") {
-						boost::json::value json_value{};
-						try {
-							json_value = boost::json::parse(get_json(file.path()));
-						} catch (...) {
-							fault.push(file.path().string());
-							continue;
-						}
-						if (json_value.is_array()) {
-							auto& json_array = json_value.as_array();
-							for (auto& item : json_array) {
-								if (Preset tmp{ item }; !tmp.empty()) {
-									auto name = tmp.name();
-									Preset::MAP.emplace(std::move(name), std::move(tmp));
-								}
+					if (file.exists(error)) {
+						if (file.path().filename() == "skin.json") {
+							boost::json::value json_value{};
+							try {
+								json_value = boost::json::parse(get_json(file.path()));
+							} catch (...) {
+								fault.push(file.path().string());
+								continue;
 							}
-						} else
-							fault.push(file.path().string());
+							if (json_value.is_array()) {
+								auto& json_array = json_value.as_array();
+								for (auto& item : json_array) {
+									if (Preset tmp{ item }; !tmp.empty()) {
+										auto name = tmp.name();
+										Preset::MAP.emplace(std::move(name), std::move(tmp));
+									}
+								}
+							} else
+								fault.push(file.path().string());
+						}
 					} else {
-						fault.push(file.path().string());
+						fault.emplace("Failed to read file " + file.path().string() + " : " + (error.value() ? error.message() : ""));
 					}
 				}
+			} else {
+				fault.emplace("Failed to iterate directory " + entry.path().string() + " : " + (error.value() ? error.message() : ""));
 			}
+
 		}
 
 		if (fault.size()) {

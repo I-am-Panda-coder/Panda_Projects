@@ -28,8 +28,6 @@
 namespace logger = F4SE::log;
 using namespace std::literals;
 
-ini::map inimap(std::filesystem::current_path().string() + "\\Data\\DiverseBodiesRedux\\dbr.ini"s);
-
 void InitAfterGameDataWasLoaded();
 void InitAfterGameWasStarted();
 void InitForms();

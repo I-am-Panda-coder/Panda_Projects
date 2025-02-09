@@ -155,7 +155,7 @@ namespace dbr_manager
 
 			auto& ini = iniSettings::getInstance();
 
-			if (hair && (!ini.getIsOnlyIfVanillaHair() || !IsVanillaHair(actor)) && (!ini.getSkipIfHatEquipped() || !IsHatEquipped(actor))) {
+			if (hair && (!ini.getIsOnlyIfVanillaHair() || IsVanillaHair(actor)) && (!ini.getSkipIfHatEquipped() || !IsHatEquipped(actor))) {
 				if (iniSettings::getInstance().getExtendedLogs())
 					logger::info("{:x} : Apply hair : {}", actor->formID, (*hair)->GetFormEditorID());
 				hairs::Preset::apply(base, *hair);

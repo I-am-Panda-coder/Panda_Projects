@@ -1,5 +1,10 @@
 #include <DiverseBodiesRedux/Parser/HairFilter.h>
 
+#include "F4SE/F4SE.h"
+#include "RE/Fallout.h"
+
+namespace logger = F4SE::log;
+
 HairFilter::HairFilter()
 {
 	std::string path = std::filesystem::current_path().string() + "\\Data\\DiverseBodiesRedux\\Hair";
@@ -12,6 +17,8 @@ HairFilter::HairFilter()
 			isWhiteListRead = true;
 			return;  // Завершаем работу конструктора, если WhiteList.txt не пустой
 		}
+	} else {
+		logger::error("WhiteList doesn't exists!");
 	}
 
 	if (std::filesystem::exists(blackListPath)) {
@@ -20,6 +27,8 @@ HairFilter::HairFilter()
 			isWhiteListRead = false;
 			return;  // Завершаем работу конструктора, если BlackList.txt не пустой
 		}
+	} else {
+		logger::error("BlackList doesn't exists!");
 	}
 
 	// Если оба файла пустые или отсутствуют, ничего не делаем

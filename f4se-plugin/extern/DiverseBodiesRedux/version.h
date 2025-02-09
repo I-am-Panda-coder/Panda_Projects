@@ -8,7 +8,7 @@ namespace ver
 {
 	inline constexpr std::size_t MAJOR = 0;
 	inline constexpr std::size_t MINOR = 1;
-	inline constexpr std::size_t PATCH = 2;
+	inline constexpr std::size_t PATCH = 6;
 
 	// Функция для вычисления версии в формате INT
 	inline constexpr uint32_t computeVersionInt(std::size_t major, std::size_t minor, std::size_t patch)
@@ -67,14 +67,3 @@ namespace ver
 
 	inline const size_t UID = 'DBRX';
 }
-
-//namespace ver
-//{
-//	inline constexpr std::size_t MAJOR = 0;
-//	inline constexpr std::size_t MINOR = 7;
-//	inline constexpr std::size_t PATCH = 0;
-//	inline constexpr uint32_t VER_INT = 0x0070;
-//	inline constexpr auto VER = "0.7.0"sv;
-//	inline constexpr auto NAME = "Panda NAFicator 0.7.0"sv;
-//	inline constexpr auto PROJECT = "NAFicator"sv;
-//}

@@ -212,20 +212,37 @@ namespace bodymorphs
 
 	void Parse()
 	{
+		std::filesystem::path folder;
+		try {
+			folder = std::filesystem::current_path() / "Data" / "DiverseBodiesRedux" / "BodyPresets";
+		} catch (std::bad_alloc& e) {
+			logger::error("Failed open file {} : {}", folder.string(), e.what());
+			return;
+		} catch (std::runtime_error& e) {
+			logger::error("Failed open file {} : {}", folder.string(), e.what());
+			return;
+		} catch (...) {
+			logger::error("Failed open file {} : unknown", folder.string());
+			return;
+		}
+
+		logger::info("Remember, JSONs and XMLs must be saved in UTF-8 (not UTF-8 BOM)");
+
 		std::stack<std::string> fault;
-
-		std::filesystem::path folder = std::filesystem::current_path() / "Data" / "DiverseBodiesRedux" / "BodyPresets";
-
-		logger::info("Remember, JSONs ans XMLs must be saved in UTF-8 (not UTF-8 BOM)");
+		std::error_code error{};
 
 		for (const auto& entry : std::filesystem::directory_iterator(folder)) {
-			if (!entry.is_directory() && (entry.path().extension() == ".json" || entry.path().extension() == ".xml")) {
-				Preset tmp(entry.path());
-				if (!tmp.empty()) {
-					Preset::MAP.emplace(std::make_pair(std::string_view(tmp.name()), std::move(tmp)));
-				} else {
-					fault.push(entry.path().filename().string());
+			if (entry.exists(error)) {
+				if (!entry.is_directory() && (entry.path().extension() == ".json" || entry.path().extension() == ".xml")) {
+					Preset tmp(entry.path());
+					if (!tmp.empty()) {
+						Preset::MAP.emplace(std::make_pair(std::string_view(tmp.name()), std::move(tmp)));
+					} else {
+						fault.push(entry.path().filename().string());
+					}
 				}
+			} else {
+				fault.emplace("Failed read file " + entry.path().string() + " : " + (error.value() ? error.message() : ""));
 			}
 		}
 

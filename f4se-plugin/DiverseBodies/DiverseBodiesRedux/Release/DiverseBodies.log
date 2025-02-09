@@ -1,8 +1,10 @@
-﻿  Diversers_Overlays.cpp
+﻿  ApplyPresetFromFile.cpp
+  Manager.cpp
+  main_dbredux.cpp
      Создается библиотека E:\Games\Fallout 4\MO2\mods\DiverseBodiesRedux\F4SE\Plugins\DiverseBodies.lib и объект E:\Games\Fallout 4\MO2\mods\DiverseBodiesRedux\F4SE\Plugins\DiverseBodies.exp
   Создание кода
-  20 of 8367 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
+  217 of 8368 functions ( 2.6%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    24 functions had inline decision re-evaluated but remain unchanged
+    240 functions had inline decision re-evaluated but remain unchanged
   Создание кода завершено
   DiverseBodies.vcxproj -> E:\Games\Fallout 4\MO2\mods\DiverseBodiesRedux\F4SE\Plugins\DiverseBodies.dll
