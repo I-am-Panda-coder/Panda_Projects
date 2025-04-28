@@ -207,12 +207,9 @@ namespace FaceAnimation
 			state->managedDatas[GameUtil::GetFaceAnimData(a.get())] = targetActor;
 		}
 
-		bool LoadAndPlayAnimation(RE::ActorHandle targetActor, std::string id, bool loop = false, bool havokSync = false)
+		//NAF Bridge
+		inline bool LoadAndPlayAnimationNoCheck(RE::ActorHandle targetActor, std::string id, bool loop = true, bool havokSync = false)
 		{
-			if (Data::GetFaceAnim(id) == nullptr) {
-				return false;
-			}
-
 			auto newAnim = std::make_unique<FaceAnimation>();
 			newAnim->loop = loop;
 			newAnim->havokSync = havokSync;
@@ -235,10 +232,13 @@ namespace FaceAnimation
 			return true;
 		}
 
-		//NAF Bridge
-		bool LoadAndPlayAnimationNoCheck(RE::ActorHandle targetActor, std::string id, bool loop = true, bool havokSync = false)
+		bool LoadAndPlayAnimation(RE::ActorHandle targetActor, std::string id, bool loop = false, bool havokSync = false)
 		{
-			auto newAnim = std::make_unique<FaceAnimation>();
+			if (Data::GetFaceAnim(id) == nullptr) {
+				return false;
+			}
+			//NAF Bridge
+			/*auto newAnim = std::make_unique<FaceAnimation>();
 			newAnim->loop = loop;
 			newAnim->havokSync = havokSync;
 
@@ -257,7 +257,8 @@ namespace FaceAnimation
 				}
 			}).detach();
 
-			return true;
+			return true;*/
+			return LoadAndPlayAnimationNoCheck(targetActor, id, loop, havokSync); //NAF Bridge
 		}
 
 		void StopAnimation(RE::ActorHandle targetActor, bool animOverride = false) {

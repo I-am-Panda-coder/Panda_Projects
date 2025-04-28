@@ -507,24 +507,31 @@ namespace fixes
 	void replace_formid_to_hkx(std::pair<RE::BSSpinLock, std::shared_ptr<ParsedObject>> obj)
 	{	
 		auto& [l, ptr] = obj;
+		auto DataHandler = RE::TESDataHandler::GetSingleton();
 		Animation* o = static_cast<Animation*>(ptr.get());
+
+		if (o->actors.empty()) {
+			o->set_invalid("Animation/actors is empty.");
+			return;
+		}
+
 		for (auto& a : o->actors)
 		{
-			if (!a.hkx.has_value())
+			if (!a.hkx)
 			{
 				auto& [form, src] = a.formId.value();
-				if (RE::TESDataHandler::GetSingleton()->LookupModByName(src)) {
-					std::shared_ptr<Form> f = extract(make_form<Form>(form, src));
+				if (DataHandler->LookupModByName(src)) {
+					auto f = extract(std::make_shared<Form>(form, src));
 					if (f) {
-						auto idle = dynamic_cast<IdleForm*>(f->get());
+						auto idle = dynamic_pointer_cast<IdleForm>(f);
 						if (idle)
 						{
 							auto hkx_path = idle->hkx();
 							//can be empty.
-							if (hkx_path.empty() || HkxFileExists(hkx_path)) {
+							/*if (hkx_path.empty() || HkxFileExists(hkx_path)) {*/
 								a.hkx = hkx_path;
 								continue;
-							}
+							/*}*/
 						}
 					}
 				 
@@ -532,15 +539,23 @@ namespace fixes
 						tesform && tesform->formType == RE::ENUM_FORM_ID::kIDLE)
 					{
 						auto hkx_path = std::string(tesform->animFileName.c_str());
-						if (hkx_path.empty() || HkxFileExists(hkx_path)) {
+						/*if (hkx_path.empty() || HkxFileExists(hkx_path)) {*/
 							a.hkx = hkx_path;
-							put(make_form<IdleForm>(form, src, a.hkx.value()));
+							put(std::make_shared<IdleForm>(form, src, a.hkx.value()));
 							continue;
-						}
+						/*}*/
 					}
 				}
 			}
-			o->set_invalid("Failed to parse animation .hkx file. Probably wrong FormId/Data or animation .hkx file doesn't exists.");
+			if (!a.hkx) {
+				std::string report{ "Failed to parse animation .hkx file. Probably wrong FormId/Data or animation .hkx file doesn't exists." };
+				if (a.formId) {
+					report += a.formId->first.empty() ? "" : (" " + a.formId->first);
+					report += a.formId->second.empty() ? "" : (" " + a.formId->second);
+				}
+				o->set_invalid(report);
+				return;
+			}
 		}
 		/*if (!o->is_valid())
 			remove_objects_linked_to_this_animation(o->get_id());*/

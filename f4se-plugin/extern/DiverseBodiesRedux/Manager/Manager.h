@@ -86,6 +86,7 @@ namespace dbr_manager
 		ActorPreset* get(RE::Actor*) const;
 		static bool contains_in_map(uint32_t actorId);
 		static ActorPreset* find(RE::Actor* actor);
+		static void clearMap();
 
 		RE::BSEventNotifyControl ProcessEvent(const RE::TESObjectLoadedEvent& a_event, RE::BSTEventSource<RE::TESObjectLoadedEvent>* a_source) override;
 

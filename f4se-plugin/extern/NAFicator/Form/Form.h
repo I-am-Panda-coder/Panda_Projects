@@ -16,55 +16,43 @@ class Archive;
 class Form;
 class IdleForm;
 
-template <class T>
-std::shared_ptr<T> make_form(const std::string& formId, const std::string& source, const std::string& optional_value = ""s)
-{
-#pragma warning(push)
-#pragma warning(disable: 4840)
-	return std::shared_ptr<T>(new T(formId, source, optional_value));
-#pragma warning(pop)
-}
-
-//template <class T, class ...Args>
-//std::shared_ptr<Form> make_form(const std::string&, const std::string&, Args... args);
-
 std::shared_ptr<Form> extract(std::shared_ptr<Form>);
 std::shared_ptr<Form> put(std::shared_ptr<Form>);
 
 class Form
 {
 	friend class Archive;
-	friend std::shared_ptr<Form> make_form<Form>(const std::string&, const std::string&, const std::string&);
 
-protected:
-	std::string m_source;
-	std::string m_form;
-	bool hasValue;
-	
-
-	uint32_t get_uint() const;
-	void normalize();
-
-	Form() :
-		m_source(""), m_form(""), hasValue(false) {}
-
-	Form(const std::string& form, const std::string& source...) :
+public:
+	explicit Form(const std::string& form, const std::string& source...) :
 		m_form(form), m_source(source)
 	{
 		normalize();
 		hasValue = true;
 	}
 
-public:
-
-	virtual ~Form() 
+	virtual ~Form()
 	{
 		hasValue = false;
 	}
 
+protected:
+	std::string m_source;
+	std::string m_form;
+	bool hasValue;
+	
+	uint32_t get_uint() const;
+	void normalize();
+
+	Form() :
+		m_source(""), m_form(""), hasValue(false) {}
+
+public:
+
 	RE::TESForm* get() const;
 	bool operator==(const Form& f) const;
 	bool has_value() { return hasValue; }
+	std::string get_form_str() const;
 	virtual std::string make_archive_string() const;
 };
 
@@ -81,15 +69,13 @@ class IdleForm : public Form
 	IdleForm(const Form& f) :
 		Form(f), m_hkx("") {}
 
-	IdleForm(const Form& f, const std::string& hkx) :
+public:
+
+	explicit IdleForm(const Form& f, const std::string& hkx) :
 		Form(f), m_hkx(hkx) { utils::remove_spaces_from_sides(m_hkx); }
 
-	IdleForm(const std::string& form, const std::string& source, const std::string& hkx) :
+	explicit IdleForm(const std::string& form, const std::string& source, const std::string& hkx) :
 		Form(form, source), m_hkx(hkx) { utils::remove_spaces_from_sides(m_hkx); }
-
-	friend std::shared_ptr<IdleForm> make_form<IdleForm>(const std::string&, const std::string&, const std::string&);
-
-public:
 
 	~IdleForm() override
 	{
@@ -153,3 +139,6 @@ public:
 		}
 	}
 };
+
+bool compare_formId_string(const std::string& a, const std::string& b);
+bool compare_source_string(const std::string& a, const std::string& b);

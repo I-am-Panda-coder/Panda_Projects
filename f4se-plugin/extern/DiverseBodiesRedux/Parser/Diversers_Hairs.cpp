@@ -1,8 +1,10 @@
 #include "Diversers.h"
 #include <thread>
+#include <DiverseBodiesRedux/Hooks/ProcessingSafe.h>
 
 extern void (*g_OriginalChangeHeadPart)(RE::TESNPC*, RE::BGSHeadPart*);
 extern void (*g_OriginalChangeHeadPartRemovePart)(RE::TESNPC*, RE::BGSHeadPart*, bool);
+extern ProcessingNPC g_processingChangeHeadParts;
 
 namespace hairs
 {
@@ -46,6 +48,7 @@ namespace hairs
 
 	void Parse()
 	{
+		logger::info("Init hairs...");
 		HairFilter filter{};
 		auto HeadParts = RE::TESDataHandler::GetSingleton()->GetFormArray<RE::BGSHeadPart>();
 
@@ -67,16 +70,26 @@ namespace hairs
 				}
 			}
 		}
+		logger::info("Hairs initialized...");
 	}
 
 	std::vector<Preset*> ApplyFilter(RE::Actor* actor)
 	{
-		std::vector<Preset*> result;
+		std::vector<Preset*> result{};
 
 		if (!actor)
 			return result;
 
-		auto isFemale = actor->GetSex() == RE::Actor::Sex::Female;
+		/*if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("hairs::ApplyFilter Invalid actor object!");
+			return result;
+		}*/
+
+		bool isFemale{};
+		if (auto sex = actor->GetSex(); sex == RE::Actor::Sex::Female || sex == RE::Actor::Sex::Male)
+			isFemale = sex == RE::Actor::Sex::Female;
+		else
+			return result;
 
 		std::unordered_set<char> validStarts = isFemale ? std::unordered_set<char>{ 'b', 'f' } : std::unordered_set<char>{ 'b', 'm' };
 
@@ -99,6 +112,11 @@ namespace hairs
 	{
 		if (!actor)
 			return nullptr;
+
+		/*if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("hairs::GetRandom Invalid actor object!");
+			return nullptr;
+		}*/
 		
 		auto filteredPresets = ApplyFilter(actor);
 		if (filteredPresets.empty()) {
@@ -113,7 +131,14 @@ namespace hairs
 
 	bool Preset::apply(RE::Actor* actor) const
 	{
-		bool result = this ? apply(find_base(actor), hair) : false;
+		if (!actor)
+			return false;
+		
+		/*if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("hairs::apply Invalid actor object!");
+			return false;
+		}*/
+		bool result = this ? apply(get_face_TESNPC(actor->GetNPC()), hair) : false;
 		return result;
 	}
 
@@ -122,6 +147,24 @@ namespace hairs
 		if (!npc || !hairpart) {
 			return false;
 		}
+
+		bool log = iniSettings::getInstance().getExtendedLogs();
+		if (log)
+			logger::info("TESNPC* {:0x} : {}", npc->formID, g_processingChangeHeadParts.print());
+
+		int count{};
+		while (g_processingChangeHeadParts.contains(npc->formID)) {
+			std::this_thread::sleep_for(std::chrono::microseconds(1));
+			++count;
+		}
+
+		if (log && count) {
+			logger::info("TESNPC* {:0x} waited for {} microseconds", npc->formID, count);
+		}
+
+		g_processingChangeHeadParts.insert(npc->formID);
+		if (log)
+			logger::info("Start processing hair for {:0x}", npc->formID);
 
 		remove_chargenConditions(npc);
 
@@ -151,19 +194,19 @@ namespace hairs
 		remove_chargen(npc);
 
 		if (auto current_hair = get_hair(npc); current_hair)
-			npc->ChangeHeadPartRemovePart(current_hair, !current_hair->extraParts.empty());
-			//g_OriginalChangeHeadPartRemovePart(npc, current_hair, !current_hair->extraParts.empty());
+			g_OriginalChangeHeadPartRemovePart(npc, current_hair, !current_hair->extraParts.empty());
 
 		hairpart->chargenConditions.head = nullptr;
-		npc->ChangeHeadPart(hairpart);
+		g_OriginalChangeHeadPart(npc, hairpart);
 		for (auto& hp : hairpart->extraParts) {
 			hp->chargenConditions.head = nullptr;
 			if (hp)
-				npc->ChangeHeadPart(hp);
-				//g_OriginalChangeHeadPart(npc, hp);
+				g_OriginalChangeHeadPart(npc, hp);
 		}
-		//g_processingChangeHeadParts.erase(npc->formID);
 
+		g_processingChangeHeadParts.erase(npc->formID);
+		if (log)
+			logger::info("Finished processing hair for {:0x}", npc->formID);
 		return true;
 	}
 }

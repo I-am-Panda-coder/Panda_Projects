@@ -1,10 +1,7 @@
-﻿  ApplyPresetFromFile.cpp
-  Manager.cpp
-  main_dbredux.cpp
-     Создается библиотека E:\Games\Fallout 4\MO2\mods\DiverseBodiesRedux\F4SE\Plugins\DiverseBodies.lib и объект E:\Games\Fallout 4\MO2\mods\DiverseBodiesRedux\F4SE\Plugins\DiverseBodies.exp
+﻿     Создается библиотека E:\Games\Fallout 4\MO2\mods\DiverseBodiesRedux\F4SE\Plugins\DiverseBodies.lib и объект E:\Games\Fallout 4\MO2\mods\DiverseBodiesRedux\F4SE\Plugins\DiverseBodies.exp
   Создание кода
-  217 of 8368 functions ( 2.6%) were compiled, the rest were copied from previous compilation.
+  4 of 8467 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    240 functions had inline decision re-evaluated but remain unchanged
+    9 functions had inline decision re-evaluated but remain unchanged
   Создание кода завершено
   DiverseBodies.vcxproj -> E:\Games\Fallout 4\MO2\mods\DiverseBodiesRedux\F4SE\Plugins\DiverseBodies.dll

@@ -1,0 +1,7 @@
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(517,5): warning MSB8004: каталог Output заканчивается не косой чертой.  Этот экземпляр сборки добавит косую черту, поскольку она необходима для правильного определения каталога Output.
+  main.cpp
+C:\C++\F4SEProjects\Snapdragon\NAF\f4se-plugin\F4NiNodesManager\main.cpp(49,50): error C2039: "VERSTRING": не является членом "ver".
+C:\C++\F4SEProjects\Snapdragon\NAF\f4se-plugin\F4NiNodesManager\main.cpp(49,50): error C2065: VERSTRING: необъявленный идентификатор
+C:\C++\F4SEProjects\Snapdragon\NAF\f4se-plugin\F4NiNodesManager\main.cpp(138,89): error C2039: "GetName": не является членом "RE::TESObjectREFR".
+C:\C++\F4SEProjects\Snapdragon\NAF\f4se-plugin\F4NiNodesManager\main.cpp(138,15): error C3615: Функция constexpr "fmt::v9::basic_format_parse_context<char,fmt::v9::detail::error_handler>::on_error" не может возвращать константное выражение в качестве результата
+C:\C++\F4SEProjects\Snapdragon\NAF\f4se-plugin\F4NiNodesManager\main.cpp(147,6): error C2039: "RegisterFunction": не является членом "RE::BSScript::IVirtualMachine".

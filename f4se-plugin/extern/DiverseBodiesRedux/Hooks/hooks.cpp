@@ -108,27 +108,92 @@ std::condition_variable mapCV;
 //}
 
 void HookedDoUpdate3DModel(RE::AIProcess* process, RE::Actor* actor, RE::RESET_3D_FLAGS flags)
-{
-	bool have_dbr_flag = bool(flags & f3D::kDiverseBodiesFlag);
-	if (have_dbr_flag)
-		flags &= static_cast<f3D>(~static_cast<uint16_t>(f3D::kDiverseBodiesFlag));
+{	
+	bool log = iniSettings::getInstance().getExtendedLogs();
+	RE::TESNPC* npc = nullptr;
+	if (log) {
+		npc = get_leveled_TESNPC(actor->GetNPC());
+		logger::info("DoUpdate3DModel started {:0x} : {:0x}, flags {}", actor->formID, npc ? npc->formID : 0, static_cast<int>(flags));
+	}
+	
+	if (!iniSettings::getInstance().getDisableChangeHeadparts()) {
+		if (!process || !process->middleHigh /*|| !actor || !actor->currentProcess || !actor->currentProcess->middleHigh*/) {
+			if (log) {
+				if (!process) {
+					logger::info("DoUpdate3DModel no proccess {:0x} : {:0x}, flags {}", actor->formID, npc ? npc->formID : 0, static_cast<int>(flags));
+				} else if (!process->middleHigh) {
+					logger::info("DoUpdate3DModel no middleHigh proccess {:0x} : {:0x}, flags {}", actor->formID, npc ? npc->formID : 0, static_cast<int>(flags));
+				} else {
+					logger::info("DoUpdate3DModel should never happens {:0x} : {:0x}, flags {}", actor->formID, npc ? npc->formID : 0, static_cast<int>(flags));
+				}
+			}
+		} else {
+			bool have_dbr_flag = bool(flags & f3D::kDiverseBodiesFlag);
+			if (have_dbr_flag) {
+				flags &= static_cast<f3D>(~static_cast<uint16_t>(f3D::kDiverseBodiesFlag));
+			}
 
-	if (flags != f3D::kNone)
-		if (auto preset = Find(actor); preset) {
 			constexpr auto headflags = static_cast<f3D>(static_cast<uint16_t>(f3D::kHead) | static_cast<uint16_t>(f3D::kFace));
-			if (auto presetFlags = preset->get_flags(); bool(presetFlags & headflags) && bool(flags & (f3D::kHead | f3D::kFace))) {
-				preset->update();
-				flags |= presetFlags;
+
+			if (log) {
+				npc = get_leveled_TESNPC(actor->GetNPC());
+				logger::info("DoUpdate3DModel proccessing {:0x} : {:0x}, have_dbr_flag {}, headflags {}",
+					actor->formID,
+					npc ? npc->formID : 0, static_cast<int>(flags),
+					have_dbr_flag ? "true" : "false",
+					bool(flags & headflags) ? "true" : "false");
+			}
+
+			if (bool(flags & headflags)) {
+				if (!have_dbr_flag && flags != f3D::kNone) {
+					if (auto preset = Find(actor); preset) {
+						if (auto presetFlags = preset->get_flags(); actor && bool(presetFlags & headflags)) {
+							flags |= presetFlags;
+							std::thread([preset, flags] {
+								std::this_thread::sleep_for(std::chrono::seconds(iniSettings::getInstance().getDelayTimer()));
+								auto& actor = preset->actor;
+								if (actor && actor->currentProcess && actor->currentProcess->middleHigh) {
+									if (iniSettings::getInstance().getExtendedLogs()) {
+										auto npc = get_leveled_TESNPC(actor->GetNPC());
+										logger::info("DoUpdate3DModel call preset->update {:0x} : {:0x} - {}",
+											actor->formID,
+											npc ? npc->formID : 0, static_cast<int>(flags));
+									}
+									preset->update(flags);
+								}
+							}).detach();
+							return;
+						}
+					}
+				}
 			}
 		}
-	
+	}
+
+	if (npc && g_processingChangeHeadParts.contains(npc->formID)) {
+		std::thread([process, actor, flags, npc, log] {
+			int count{};
+			while (g_processingChangeHeadParts.contains(npc->formID)) {
+				std::this_thread::sleep_for(std::chrono::microseconds(1));
+				++count;
+			}
+			HookedDoUpdate3DModel(process, actor, flags);
+			if (log && count) {
+				logger::info("HookedDoUpdate3DModel TESNPC* {:0x} waited for {} microseconds", npc->formID, count);
+			}
+		}).detach();
+		return;
+	}
+
+	g_processingChangeHeadParts.insert(npc->formID);
+
+	if (log) {
+		logger::info("DoUpdate3DModel call original proccess {:0x} : {:0x}, flags {}", actor->formID, npc ? npc->formID : 0, static_cast<int>(flags));
+	}
+
 	g_OriginalDoUpdate3DModel(process, actor, flags);
 
-	//if (have_dbr_flag) {
-	////	std::this_thread::sleep_for(std::chrono::seconds(1));
-	//	auto npc = get_leveled_TESNPC(actor->GetNPC());
-	//	if (npc) g_processingReset.erase(npc->formID);
-	//}
+	g_processingChangeHeadParts.erase(npc->formID);
 }
 
 void remove_with_extra(RE::TESNPC* npc, RE::BGSHeadPart* hpart) {
@@ -146,8 +211,7 @@ void ProcessChangeHeadPart(RE::TESNPC* npc, RE::BGSHeadPart* hpart, bool bRemove
 	if (!npc || !hpart)
 		return;
 
-	auto base_npc = get_leveled_TESNPC(npc);
-	npc = base_npc ? base_npc : npc;
+	npc = get_face_TESNPC(npc);
 
 	if (g_processingChangeHeadParts.contains(npc->formID)) {
 		std::thread([npc, hpart, bRemoveExtraParts, isRemove] {
@@ -160,7 +224,9 @@ void ProcessChangeHeadPart(RE::TESNPC* npc, RE::BGSHeadPart* hpart, bool bRemove
 	}
 
 	g_processingChangeHeadParts.insert(npc->formID);
-
+	bool log = iniSettings::getInstance().getExtendedLogs();
+	if (log)
+		logger::info("Start processing head for {:0x}", npc->formID);
 	if (isRemove) {
 		if (bRemoveExtraParts)
 			remove_with_extra(npc, hpart);
@@ -172,16 +238,24 @@ void ProcessChangeHeadPart(RE::TESNPC* npc, RE::BGSHeadPart* hpart, bool bRemove
 	}
 
 	g_processingChangeHeadParts.erase(npc->formID);
+	if (log)
+		logger::info("Finished processing head for {:0x}", npc->formID);
 }
 
 void HookedChangeHeadPartRemovePart(RE::TESNPC* npc, RE::BGSHeadPart* hpart, bool bRemoveExtraParts)
 {
+	if (!npc || !hpart) {
+		return g_OriginalChangeHeadPartRemovePart(npc, hpart, bRemoveExtraParts);
+	}
 	ProcessChangeHeadPart(npc, hpart, bRemoveExtraParts, true);
 	//g_OriginalChangeHeadPartRemovePart(npc, hpart, bRemoveExtraParts);
 }
 
 void HookedChangeHeadPart(RE::TESNPC* npc, RE::BGSHeadPart* hpart)
 {
+	if (!npc || !hpart) {
+		return g_OriginalChangeHeadPart(npc, hpart);
+	}
 	ProcessChangeHeadPart(npc, hpart, false, false);
 	//g_OriginalChangeHeadPart(npc, hpart);
 }

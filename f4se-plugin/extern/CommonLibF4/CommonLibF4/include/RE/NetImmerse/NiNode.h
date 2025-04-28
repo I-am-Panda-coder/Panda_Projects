@@ -53,5 +53,6 @@ namespace RE
 		BSTAtomicValue<std::uint32_t> dirtyState;        // 138
 		float meshLODFadeAmount{ 0.0F };                 // 13C
 	};
+
 	static_assert(sizeof(NiNode) == 0x140);
 }

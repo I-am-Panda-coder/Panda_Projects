@@ -52,7 +52,7 @@ namespace overlays
 
 			if (auto it = obj.find("id"); it != end && it->value().is_string()) {
 				id = it->value().as_string();
-				if (!Preset::ValidOverlays.contains(id)) {
+				if (Preset::ValidOverlays.empty() || !Preset::ValidOverlays.contains(id)) {
 					logger::info("Overlay with id '{}' doesn't exists in Looks Menu!", id);
 					id.clear();
 					return;
@@ -242,8 +242,13 @@ namespace overlays
 			);*/
 
 			Remove(actor, id.c_str());
-
-			LooksMenuInterfaces<OverlayInterface>::GetInterface()->AddOverlay(actor, actor->GetSex() == RE::Actor::Female,
+			auto Interface = LooksMenuInterfaces<OverlayInterface>::GetInterface();
+			if (!Interface) {
+				logger::critical("LooksMenuInterfaces is nullptr!");
+				return false;
+			}
+			if (auto sex = actor->GetSex(); sex == RE::Actor::Sex::Female || sex == RE::Actor::Sex::Male)
+				Interface->AddOverlay(actor, sex == RE::Actor::Female,
 				settings.priority, id.c_str(), settings.tint, settings.offsetUV, settings.scaleUV);
 			return true;
 		}
@@ -489,18 +494,17 @@ namespace overlays
 		if (empty())
 			return;
 
-		for (auto it = overlays.begin(); it != overlays.end(); ++it)
-		{
-			if (!it->is_valid())
+		for (auto it = overlays.begin(); it != overlays.end();) {
+			if (!it->is_valid()) {
 				it = overlays.erase(it);
+			} else {
+				++it;
+			}
 		}
 	}
 
 	bool Preset::Overlay::apply(RE::Actor* actor) const
-	{
-		if (!this)
-			return false;
-		
+	{	
 		if (!conditions.check(actor))
 			return false;
 
@@ -621,25 +625,20 @@ namespace overlays
 
 	void Parse()
 	{	
+		logger::info("Init overlays...");
 		Preset::ValidOverlays = GetValid();
 
 		if (Preset::ValidOverlays.empty()) {
 			return;
 		}
 		
-		std::filesystem::path folder;
-		try {
-			folder = std::filesystem::current_path() / "Data" / "DiverseBodiesRedux" / "Overlays";
-		} catch (std::bad_alloc e) {
-			logger::error("Failed open file {} : {}", folder.string(), e.what());
-			return;
-		} catch (std::runtime_error e) {
-			logger::error("Failed open file {} : {}", folder.string(), e.what());
-			return;
-		} catch (...) {
-			logger::error("Failed open file {} : unknown", folder.string());
+		std::filesystem::path folder = std::filesystem::current_path() / "Data" / "DiverseBodiesRedux" / "Overlays";
+
+		if (!std::filesystem::exists(folder)) {
+			logger::error("Overlays initiallization failed. Failed to open file {}", folder.string());
 			return;
 		}
+
 		std::stack<std::string> fault;
 		std::error_code error{};
 
@@ -675,14 +674,19 @@ namespace overlays
 				fault.pop();
 			}
 		}
+		logger::info("... overlays initialized.");
 	}
 
 	static std::set<std::string> ValidOverlays{};
 
 	const std::set<std::string>& GetValid()
 	{
-		if (!ValidOverlays.empty())
+		static bool parse_once{};
+		if (parse_once) {
 			return ValidOverlays;
+		}
+
+		parse_once = true;
 
 		auto ParseOverlayJSON = [](const std::filesystem::path& path) -> bool {
 			auto result = false;
@@ -730,6 +734,8 @@ namespace overlays
 									// Проверяем существование файла
 									if (FileExists(material, "materials")) {
 										++success_counter;
+									} else {
+										logger::error("Material file not found: {}", material);
 									}
 								}
 							}
@@ -802,7 +808,7 @@ namespace overlays
 	{
 		logger::info("{}", vo);
 	}*/
-		if (!ValidOverlays.size())
+		if (ValidOverlays.empty())
 			logger::warn("Failed to parse valid overlays : no overlays in folder!");
 
 		return ValidOverlays;
@@ -813,18 +819,47 @@ namespace overlays
 		if (!actor)
 			return;
 
+		if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("overlays::Remove Invalid actor object!");
+			return;
+		}
+
 		bool found = false;
-		LooksMenuInterfaces<OverlayInterface>::GetInterface()->ForEachOverlay(actor, static_cast<bool>(actor->GetSex()), [&found, &actor, &id](int32_t uid, const OverlayInterface::OverlayDataPtr& overlay) {
-			if (!found && strcmp(overlay->templateName.get()->c_str(), id.c_str()) == 0) {
-				LooksMenuInterfaces<OverlayInterface>::GetInterface()->RemoveOverlay(actor, static_cast<bool>(actor->GetSex()), overlay->uid);
-				found = true;
-			}
-		});
+		auto Interface = LooksMenuInterfaces<OverlayInterface>::GetInterface();
+		if (!Interface) {
+			logger::critical("LooksMenuInterfaces is nullptr!");
+			return;
+		}
+
+		if (auto getSexRes = actor->GetSex(); getSexRes != -1) {
+			Interface->ForEachOverlay(actor, static_cast<bool>(getSexRes), [&found, &actor, &id, Interface, sex = static_cast<bool>(getSexRes)](int32_t uid, const OverlayInterface::OverlayDataPtr& overlay) {
+				auto str = id.c_str();
+				if (!found && str && strcmp(overlay->templateName->c_str(), str) == 0) {
+					Interface->RemoveOverlay(actor, sex, overlay->uid);
+					found = true;
+				}
+			});
+		}
 	}
 
 	void Remove(RE::Actor* actor)
 	{
-		LooksMenuInterfaces<OverlayInterface>::GetInterface()->RemoveAll(actor, actor->GetSex() == RE::Actor::Sex::Female);
+		if (!actor)
+			return;
+		
+		if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("overlays::Remove Invalid actor object!");
+			return;
+		}
+
+		auto Interface = LooksMenuInterfaces<OverlayInterface>::GetInterface();
+		if (!Interface) {
+			logger::critical("LooksMenuInterfaces is nullptr!");
+			return;
+		}
+
+		if (auto sex = actor->GetSex(); sex == RE::Actor::Sex::Female || sex == RE::Actor::Sex::Male)
+			Interface->RemoveAll(actor, sex == RE::Actor::Sex::Female);
 	}
 
 	Collection::Collection(const RE::Actor* actor) :
@@ -850,6 +885,14 @@ namespace overlays
 
 	void Collection::handle_details(const RE::Actor* actor, const std::unordered_set<Preset::Overlay, Preset::Overlay::Hash, Preset::Overlay::Equal>& details)
 	{
+		if (!actor)
+			return;
+		
+		/*if (const RE::Actor* a = RE::fallout_cast<const RE::Actor*>(actor); !a) {
+			logger::critical("overlays::handle_details Invalid actor object!");
+			return;
+		}*/
+
 		for (const auto& d : details) {
 			handle_detail(actor, d);  // Обработка каждой детали
 		}
@@ -857,6 +900,14 @@ namespace overlays
 
 	void Collection::handle_detail(const RE::Actor* actor, const Preset::Overlay& detail)
 	{
+		if (!actor)
+			return;
+		
+		/*if (const RE::Actor* a = RE::fallout_cast<const RE::Actor*>(actor); !a) {
+			logger::critical("overlays::handle_detail Invalid actor object!");
+			return;
+		}*/
+
 		if (detail.empty() || !detail.check(actor))
 			return;
 
@@ -880,6 +931,14 @@ namespace overlays
 
 	bool Collection::apply(RE::Actor* actor) const
 	{
+		if (!actor)
+			return false;
+		
+		if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("overlays::apply Invalid actor object!");
+			return false;
+		}
+
 		for (const auto& o : overlays) {
 			o.apply(actor);
 		}

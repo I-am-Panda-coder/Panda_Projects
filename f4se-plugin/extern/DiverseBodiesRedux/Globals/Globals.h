@@ -36,6 +36,7 @@ class iniSettings
 	int i_hair_female_chance{0};
 	bool b_skip_if_hat_equipped{};
 	bool b_only_if_vanilla_hair{ true };
+	bool b_disable_change_headparts{ false };
 	int i_performance{10};
 	int i_delay_timer{5};
 	bool b_extended_log{};
@@ -69,6 +70,7 @@ class iniSettings
 	inline int getPerformance() const { return i_performance; }
 	inline int getDelayTimer() const { return i_delay_timer; }
 	inline bool getExtendedLogs() const { return b_extended_log; }
+	inline bool getDisableChangeHeadparts() const { return b_disable_change_headparts; }
 };
 
 class global
@@ -233,15 +235,39 @@ inline auto copy_headparts(RE::TESNPC* npc)
 	return std::vector<RE::BGSHeadPart*>(hparts.begin(), hparts.end());
 }
 
+//inline RE::TESNPC* get_leveled_TESNPC(RE::TESNPC* npc)
+//{
+//	if (!npc)
+//		return nullptr;
+//
+//	auto& templateFlags = npc->actorData.templateUseFlags;
+//	if (((templateFlags & RE::TESActorBaseData::TemplateFlags::kFlagTraits) != 0) && npc->templateForms) {
+//		npc = RE::fallout_cast<RE::TESNPC*>(*npc->templateForms);
+//		npc = get_leveled_TESNPC(npc);
+//	}
+//	return npc;
+//}
+
+inline RE::TESNPC* get_face_TESNPC(RE::TESNPC* npc) {
+	while (npc->faceNPC)
+		npc = npc->faceNPC;
+	return npc;
+}
+
 inline RE::TESNPC* get_leveled_TESNPC(RE::TESNPC* npc)
 {
-	if (!npc)
-		return nullptr;
+	while (npc) {
+		const auto& templateFlags = npc->actorData.templateUseFlags;
+		const bool useTemplate = (templateFlags & RE::TESActorBaseData::TemplateFlags::kFlagTraits) != 0;
 
-	auto& templateFlags = npc->actorData.templateUseFlags;
-	if (((templateFlags & RE::TESActorBaseData::TemplateFlags::kFlagTraits) != 0) && npc->templateForms) {
-		npc = RE::fallout_cast<RE::TESNPC*>(*npc->templateForms);
-		npc = get_leveled_TESNPC(npc);
+		if (!useTemplate || !npc->templateForms)
+			break;
+
+		auto nextNPC = RE::fallout_cast<RE::TESNPC*>(*npc->templateForms);
+		if (!nextNPC)
+			break;
+
+		npc = nextNPC;
 	}
 	return npc;
 }
@@ -249,7 +275,7 @@ inline RE::TESNPC* get_leveled_TESNPC(RE::TESNPC* npc)
 inline void remove_chargenConditions(RE::TESNPC* npc)
 {
 	if (npc) {
-		npc = get_leveled_TESNPC(npc);
+		npc = get_face_TESNPC(npc);
 		if (npc && npc->formType == RE::ENUM_FORM_ID::kNPC_) {
 			auto hparts = npc->GetHeadParts();
 			for (auto& hp : hparts) {
@@ -277,12 +303,4 @@ inline void remove_chargen_from_all_tesnpc(RE::TESNPC* npc)
 			}
 		}
 	}
-}
-
-inline RE::TESNPC* find_base(RE::Actor* actor)
-{
-	auto base = get_leveled_TESNPC(actor->GetNPC());
-	if (base && base->formType != RE::ENUM_FORM_ID::kNPC_)
-		base = nullptr;
-	return base;
 }

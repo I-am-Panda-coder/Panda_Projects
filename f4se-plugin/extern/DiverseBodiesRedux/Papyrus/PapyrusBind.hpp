@@ -102,7 +102,7 @@ namespace papyrus
 
 	void ApplyRandomHair(std::monostate, RE::Actor* actor)
 	{
-		auto npc = find_base(actor);
+		auto npc = get_face_TESNPC(actor->GetNPC());
 		if (!npc)
 			return;
 
@@ -118,12 +118,14 @@ namespace papyrus
 				p_preset->hair = hair_preset->hpart();
 			if (p_preset->hair)
 				if (dbr_manager::ActorsManager::move_to_map(std::move(*p_preset)))
-					actor->Reset3D(false, RE::RESET_3D_FLAGS::kDiverseBodiesFlag, false, RE::RESET_3D_FLAGS::kNone);
+					dbr_manager::ActorsManager::getInstance()->get(actor)->update(f3D::kHead);
+					//actor->Reset3D(false, RE::RESET_3D_FLAGS::kDiverseBodiesFlagNoWait, false, RE::RESET_3D_FLAGS::kNone);
 		} else {
 			if (hair_preset && hair_preset->hpart())
 				p_preset->hair = hair_preset->hpart();
 			if (p_preset->hair)
-				actor->Reset3D(false, RE::RESET_3D_FLAGS::kDiverseBodiesFlag, false, RE::RESET_3D_FLAGS::kNone);
+				p_preset->update(f3D::kHead);
+				//actor->Reset3D(false, RE::RESET_3D_FLAGS::kHead | RE::RESET_3D_FLAGS::kDiverseBodiesFlag, false, RE::RESET_3D_FLAGS::kNone);
 		}
 	}
 
@@ -132,12 +134,19 @@ namespace papyrus
 		iniSettings::getInstance().update();
 	}
 
+	inline void ClearActorsMap(std::monostate)
+	{
+		dbr_manager::ActorsManager::clearMap();
+		logger::info("Actors map cleared!");
+	}
+
 	inline bool RegisterFunctions(RE::BSScript::IVirtualMachine* a_VM)
 	{
 		PAPYRUS_BIND(IsSerializeFinished);
 		PAPYRUS_BIND(ApplyBodyPresetFromFile);
 		PAPYRUS_BIND(ApplyRandomHair);
 		PAPYRUS_BIND(UpdateSettings);
+		PAPYRUS_BIND(ClearActorsMap);
 		return true;
 	}
 }

@@ -9,6 +9,9 @@ namespace dbr_manager
 {
 	ActorPreset::ActorPreset(RE::Actor* actor)
 	{
+		if (!actor)
+			return;
+		
 		if (!actor || !RE::fallout_cast<RE::Actor*>(actor))
 			return;
 
@@ -37,27 +40,31 @@ namespace dbr_manager
 				overlays = col;
 			}
 
-			base = find_base(actor);
+			if (!iniSettings::getInstance().getDisableChangeHeadparts()) {
+				auto base = get_face_TESNPC(actor->GetNPC());
 
-			// Проверка шанса на skin
-			int skinChance = isFemale ? ini.getSkinFemaleChance() : ini.getSkinMaleChance();
-			if (base && skinChance != 0 && (skinChance == 100 || checkRND(skinChance)))
-				if (auto rnd = skins::GetRandom(actor); rnd)
-					skin = rnd->name();
+				// Проверка шанса на skin
+				int skinChance = isFemale ? ini.getSkinFemaleChance() : ini.getSkinMaleChance();
+				if (base && skinChance != 0 && (skinChance == 100 || checkRND(skinChance)))
+					if (auto rnd = skins::GetRandom(actor); rnd)
+						skin = rnd->name();
 
-			// Проверка шанса на hair
-			int hairChance = isFemale ? ini.getHairFemaleChance() : ini.getHairMaleChance();
-			if (base && hairChance != 0 && (hairChance == 100 || checkRND(hairChance)))
-				if (auto rnd = hairs::GetRandom(actor); rnd)
-					hair = rnd->hpart();
+				// Проверка шанса на hair
+				int hairChance = isFemale ? ini.getHairFemaleChance() : ini.getHairMaleChance();
+				if (base && hairChance != 0 && (hairChance == 100 || checkRND(hairChance)))
+					if (auto rnd = hairs::GetRandom(actor); rnd)
+						hair = rnd->hpart();
+			}
 			
 			this->actor = actor;
 		}
-		
 	}
 
 	ActorPreset::ActorPreset(RE::Actor* actor, int)
 	{
+		if (!actor)
+			return;
+		
 		if (!actor || !RE::fallout_cast<RE::Actor*>(actor))
 			return;
 
@@ -80,12 +87,13 @@ namespace dbr_manager
 			deserialize(obj.as_object());
 	}
 
-	RE::TESNPC* find_base(RE::Actor* actor)
+	inline RE::TESNPC* find_base(RE::Actor* actor)
 	{
-		auto base = get_leveled_TESNPC(actor->GetNPC());
+		/*auto base = get_leveled_TESNPC(actor->GetNPC());
 		if (base && base->formType != RE::ENUM_FORM_ID::kNPC_)
 			base = nullptr;
-		return base;
+		return base;*/
+		return get_face_TESNPC(actor->GetNPC());
 	}
 
 	bool ActorPreset::empty() const
@@ -96,34 +104,59 @@ namespace dbr_manager
 	bool ActorPreset::apply(bool reset, bool a_reloadAll, RE::RESET_3D_FLAGS a_additionalFlags, bool a_queueReset, RE::RESET_3D_FLAGS a_excludeFlags) const
 	{			
 		auto reset_actor = [&, this]() {
+			
+			if (!actor)
+				return;
+
 			a_additionalFlags |= get_flags();
+			a_additionalFlags |= f3D::kDiverseBodiesFlag;
 			a_excludeFlags &= get_rflags();
 			a_queueReset = false;
 
 			if (iniSettings::getInstance().getExtendedLogs())
-				logger::info("{:x} : Apply Reset 3d ({}, {}, {}, {}", actor->formID,
+				logger::info("reset_actor : {:0x} : Apply Reset 3d ({}, {}, {}, {})", actor ? actor->formID : 0,
 					a_reloadAll ? "true" : "false",
 					std::to_string(static_cast<uint16_t>(a_additionalFlags)),
 					a_queueReset ? "true" : "false",
 					std::to_string(static_cast<uint16_t>(a_excludeFlags)));
 
-			//g_OriginalReset3D(actor, a_reloadAll, a_additionalFlags, a_queueReset, a_excludeFlags);
-			actor->Reset3D(a_reloadAll, a_additionalFlags, a_queueReset, a_excludeFlags);
-
-			/*while (base && g_processingReset.contains(base->formID))
-				std::this_thread::sleep_for(std::chrono::milliseconds(10));*/
+			if (reset && actor && actor->GetFullyLoaded3D() && actor->currentProcess && actor->currentProcess->middleHigh)
+				actor->Reset3D(a_reloadAll, a_additionalFlags, a_queueReset, a_excludeFlags);
+			else if (iniSettings::getInstance().getExtendedLogs())
+				logger::info("reset_actor : {:0x} : can't reset 3d, actor not loaded!", actor ? actor->formID : 0);
 		};
 		
 		if (!actor || empty())
 			return false;
+
+		/*const RE::Actor* actor_check = RE::fallout_cast<const RE::Actor*>(actor);
+		if (!actor_check) {
+			logger::critical("apply : Invalid actor object!");
+			return false;
+		}*/
+
+		try {
+			const RE::Actor* actor_check = RE::fallout_cast<const RE::Actor*>(actor);
+			if (!actor_check) {
+				logger::critical("apply : Invalid actor object!");
+				return false;
+			}
+		} catch (const std::exception& e) {
+			logger::critical("apply : RTTI error: {}", e.what());
+			return false;
+		} catch (...) {
+			logger::critical("apply : RTTI error unknown");
+		}
+
+
 		
 		if (iniSettings::getInstance().getExtendedLogs())
-			logger::info("Apply preset for {}->{:x}", actor->GetDisplayFullName(), actor->formID);
+			logger::info("apply : Apply preset for {}->{:0x}", actor->GetDisplayFullName(), actor->formID);
 
 		if (body) {
 			if (auto bp = bodymorphs::Get(*body); bp) {
 				if (iniSettings::getInstance().getExtendedLogs())
-					logger::info("{:x} : Apply body : {}", actor->formID, bp->name());
+					logger::info("apply : {:0x} : Apply body : {}", actor->formID, bp->name());
 				bp->apply(actor);
 			}
 		}
@@ -139,52 +172,43 @@ namespace dbr_manager
 						first = false;
 					overlays_str += o.id;
 				}
-				logger::info("{:x} : Apply overlays : {}", actor->formID, overlays_str);
+				logger::info("apply : {:0x} : Apply overlays : {}", actor->formID, overlays_str);
 			}
 			overlays->apply(actor);
 		}
 
-		if (base) {
-			std::lock_guard l{ m };
+		if (!iniSettings::getInstance().getDisableChangeHeadparts()) {
+			auto base = get_face_TESNPC(actor->GetNPC());
+			if (base) {
+				if (skin) {
+					if (iniSettings::getInstance().getExtendedLogs())
+						logger::info("apply : {} {:0x} : {:0x} Apply skin : {}", actor->GetDisplayFullName(), actor->formID, base->formID, *skin);
+					LooksMenuInterfaces<SkinInterface>::GetInterface()->AddSkinOverride(actor, *skin, actor->GetSex() == RE::Actor::Sex::Female);
+				}
 
-			if (skin) {
-				if (iniSettings::getInstance().getExtendedLogs())
-					logger::info("{:x} : Apply skin : {}", actor->formID, *skin);
-				LooksMenuInterfaces<SkinInterface>::GetInterface()->AddSkinOverride(actor, *skin, actor->GetSex() == RE::Actor::Sex::Female);
+				auto& ini = iniSettings::getInstance();
+
+				if (hair && (!ini.getIsOnlyIfVanillaHair() || IsVanillaHair(actor)) && (!ini.getSkipIfHatEquipped() || !IsHatEquipped(actor))) {
+					if (iniSettings::getInstance().getExtendedLogs())
+						logger::info("apply : {} {:0x} : {:0x} Apply hair : {}", actor->GetDisplayFullName(), actor->formID, base->formID, (*hair)->GetFormEditorID());
+					hairs::Preset::apply(base, *hair);
+				}
 			}
 
-			auto& ini = iniSettings::getInstance();
-
-			if (hair && (!ini.getIsOnlyIfVanillaHair() || IsVanillaHair(actor)) && (!ini.getSkipIfHatEquipped() || !IsHatEquipped(actor))) {
-				if (iniSettings::getInstance().getExtendedLogs())
-					logger::info("{:x} : Apply hair : {}", actor->formID, (*hair)->GetFormEditorID());
-				hairs::Preset::apply(base, *hair);
-			}
-
-			if (reset && actor->GetFullyLoaded3D() && actor->currentProcess) {
+			if (reset) {
 				reset_actor();
-			} else {
-				/*if (base)
-					g_processingReset.erase(base->formID);*/
-				if (iniSettings::getInstance().getExtendedLogs()) 
-					logger::info("{:x} : can't reset 3d, actor not loaded!", actor->formID);
-			}
-		} else {
-
-			if (reset && actor->GetFullyLoaded3D() && actor->currentProcess) {
-				reset_actor();
-			} else {	
-				if (iniSettings::getInstance().getExtendedLogs()) 
-					logger::info("{:x} : can't reset 3d, actor not loaded!", actor->formID);
 			}
 		}
 
 		return true;
 	}
 
-	bool ActorPreset::update() const
+	bool ActorPreset::update(f3D flags) const
 	{
-		return apply();
+		if (actor)
+			return apply(flags != f3D::kNone, false, flags);
+		else
+			return false;
 	}
 
 	boost::json::object ActorPreset::serialize() const
@@ -194,10 +218,6 @@ namespace dbr_manager
 		// Serialize actor form ID
 		if (actor) {
 			obj["actor_formId"] = actor->formID;
-		}
-
-		if (base) {
-			obj["base_formId"] = base->formID;
 		}
 
 		// Serialize body and skin
@@ -228,14 +248,12 @@ namespace dbr_manager
 			uint32_t formID = obj["actor_formId"].as_int64();
 			actor = GetFormByResolvedFormID<RE::Actor>(formID);
 		}
+
 		if (!actor)
 			return *this;
 
-		// Deserialize actor form ID
-		if (obj.contains("base_formId")) {
-			uint32_t formID = obj["base_formId"].as_int64();
-			base = GetFormByResolvedFormID<RE::TESNPC>(formID);
-		}
+		if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor)
+			return *this;
 
 		// Deserialize body and skin
 		if (obj.contains("body")) {
@@ -295,12 +313,12 @@ namespace dbr_manager
 		if (skin) {
 			f |= static_cast<uint16_t>(f3D::kSkin);  // Устанавливаем флаг kSkin
 			f |= static_cast<uint16_t>(f3D::kFace);  // Устанавливаем флаг kFace
-			f |= static_cast<uint16_t>(f3D::kHead);	
+			//f |= static_cast<uint16_t>(f3D::kHead);	
 		}
 
 		// Проверяем наличие волос и устанавливаем соответствующие флаги
 		if (hair) {
-			f |= static_cast<uint16_t>(f3D::kFace);
+			//f |= static_cast<uint16_t>(f3D::kFace);
 			f |= static_cast<uint16_t>(f3D::kHead);			// Устанавливаем флаг kHead
 			//f &= ~static_cast<uint16_t>(f3D::kKeepHead);  // Убираем флаг kKeepHead
 		}
@@ -322,10 +340,12 @@ namespace dbr_manager
 
 	f3D ActorPreset::update_head_and_return_flags() const
 	{
+		auto base = get_face_TESNPC(actor->GetNPC());
+
 		auto f = f3D::kNone;
-		if (hair) {
+		if (base && hair) {
 			if (iniSettings::getInstance().getExtendedLogs())
-				logger::info("{:x} : Apply hair : {}", actor->formID, (*hair)->GetFormEditorID());
+				logger::info("update_head_and_return_flags : {} {:0x} : {:0x} Apply hair : {}", actor->GetDisplayFullName(), actor->formID, base->formID, (*hair)->GetFormEditorID());
 			hairs::Preset::apply(base, *hair);
 
 			f |= f3D::kFace;

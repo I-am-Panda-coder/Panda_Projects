@@ -36,6 +36,8 @@ public:
 	size_t size() const;
 	bool empty() const;
 
+	std::string print();
+
 	std::optional<uint32_t> find(uint32_t key) const;
 
 	class SafeIterator

@@ -4,22 +4,16 @@ namespace skins
 {
 	void Parse()
 	{
-		std::filesystem::path folder;
-		try {
-			folder = std::filesystem::current_path() / "Data" / "F4SE" / "Plugins" / "F4EE" / "Skin";
-		} catch (std::bad_alloc& e) {
-			logger::error("Failed open file {} : {}", folder.string(), e.what());
-			return;
-		} catch (std::runtime_error& e) {
-			logger::error("Failed open file {} : {}", folder.string(), e.what());
-			return;
-		} catch (...) {
-			logger::error("Failed open file {} : unknown", folder.string());
-			return;
-		}
+		logger::info("Init skins...");
+		std::filesystem::path folder = std::filesystem::current_path() / "Data" / "F4SE" / "Plugins" / "F4EE" / "Skin";
 
 		std::stack<std::string> fault;
 		std::error_code error{};
+
+		if (!std::filesystem::exists(folder)) {
+			logger::error("Skins initiallization failed. Failed to open file {}", folder.string());
+			return;
+		}
 
 		for (const auto& entry : std::filesystem::directory_iterator(folder)) {
 			if (entry.exists(error) && entry.is_directory(error)) {
@@ -68,6 +62,8 @@ namespace skins
 			auto& gender = preset.conditions.gender;
 			logger::info("{} - {}", id, gender == RE::Actor::Sex::None ? "Any" : gender == RE::Actor::Sex::Female ? "Female" : "Male");
 		}
+
+		logger::info("...skins initialized.");
 	}
 
 	Preset::Preset(boost::json::value& item)
@@ -171,13 +167,33 @@ namespace skins
 
 	void Remove(RE::Actor* actor)
 	{
-		auto g = LooksMenuInterfaces<SkinInterface>::GetInterface();
-		g->RemoveSkinOverride(actor);
+		if (!actor)
+			return;
+		
+		/*if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("skins::Remove Invalid actor object!");
+			return;
+		}*/
+
+		auto Interface = LooksMenuInterfaces<SkinInterface>::GetInterface();
+		if (!Interface) {
+			logger::critical("SkinInterface is nullptr!");
+			return;
+		}
+		Interface->RemoveSkinOverride(actor);
 	}
 
 	std::vector<Preset*> ApplyFilter(RE::Actor* actor)
 	{
 		std::vector<Preset*> result{};
+		if (!actor)
+			return result;
+
+		/*if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("skins::ApplyFilter Invalid actor object!");
+			return result;
+		}*/
+
 		for (auto& preset : Preset::MAP) {
 			if (preset.second.conditions.check(actor))
 				result.emplace_back(&preset.second);
@@ -187,6 +203,14 @@ namespace skins
 
 	Preset* GetRandom(RE::Actor* actor)
 	{
+		if (!actor)
+			return nullptr;
+		
+		/*if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("skins::GetRandom Invalid actor object!");
+			return nullptr;
+		}*/
+
 		auto filteredPresets = ApplyFilter(actor);
 		if (filteredPresets.empty()) {
 			return nullptr;
@@ -200,7 +224,15 @@ namespace skins
 
 	bool Preset::apply(RE::Actor* actor) const
 	{	
-		if (!actor || id.empty())
+		if (!actor)
+			return false;
+
+		/*if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("skins::apply Invalid actor object!");
+			return false;
+		}*/
+
+		if (id.empty())
 			return false;
 
 		if (!conditions.check(actor))
@@ -208,7 +240,15 @@ namespace skins
 
 		remove_chargen(actor);
 
-		return LooksMenuInterfaces<SkinInterface>::GetInterface()->AddSkinOverride(actor, id, actor->GetSex() == RE::Actor::Sex::Female);
+		auto Interface = LooksMenuInterfaces<SkinInterface>::GetInterface();
+		if (!Interface) {
+			logger::critical("SkinInterface is nullptr!");
+			return false;
+		}
+		if (auto sex = actor->GetSex(); sex == RE::Actor::Sex::Female || sex == RE::Actor::Sex::Male)
+			return Interface->AddSkinOverride(actor, id, sex == RE::Actor::Sex::Female);
+		else
+			return false;
 	}
 
 	Preset* Get(const std::string& id)

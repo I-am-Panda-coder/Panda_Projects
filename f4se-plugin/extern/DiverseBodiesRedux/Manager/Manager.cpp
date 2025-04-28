@@ -12,19 +12,40 @@ using f3D = RE::RESET_3D_FLAGS;
 extern TESObjectLoadedEventHandler g_OriginalReceiveEventObjectLoaded;
 concurrency::concurrent_queue<std::pair<uint32_t, void*>> looksmenu_hooked_queue;
 
+
 namespace dbr_manager
 {
 	bool ActorsManager::proccess_actor_after_loaded(RE::Actor* actor) 
 	{	
+		bool log = iniSettings::getInstance().getExtendedLogs();
+		if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("dbr_manager::ActorsManager::proccess_actor_after_loaded Invalid actor object!");
+		} else if (log) {
+			logger::info("dbr_manager::ActorsManager::proccess_actor_after_loaded: {} : {:0x}", actor->GetDisplayFullName(), actor->formID);
+		}
+		
 		if (actor) {
 			if (auto it = actors_map.find(actor->formID); it == actors_map.end()) {
 				if (move_to_map(ActorPreset(actor))) {
-					if (iniSettings::getInstance().getExtendedLogs()) {
+					if (log) {
 						logger::info("Add to map {}->{}", actor->GetDisplayFullName(), std::format("{:x}", actor->formID));
 					}
-					actor->Reset3D(false, RE::RESET_3D_FLAGS::kDiverseBodiesFlag, false, RE::RESET_3D_FLAGS::kNone);
+					//actor->Reset3D(false, RE::RESET_3D_FLAGS::kDiverseBodiesFlag, false, RE::RESET_3D_FLAGS::kNone);
+					if (auto it = actors_map.find(actor->formID); it != actors_map.end())
+						it->second.apply(true);
 					return true;
+				} else {
+					return false;
 				}
+			} else {
+				/*if (RE::fallout_cast<RE::Actor*>(it->second.actor) == nullptr) {
+					return false;
+				}*/
+				if (log) {
+					logger::info("Proccessed from map {}->{}", actor->GetDisplayFullName(), std::format("{:x}", actor->formID));
+				}
+				it->second.apply(true);
+				return true;
 			}
 		}
 		return false;
@@ -42,19 +63,6 @@ namespace dbr_manager
 	
 	RE::BSEventNotifyControl ActorsManager::ProcessEvent(const RE::TESObjectLoadedEvent& a_event, RE::BSTEventSource<RE::TESObjectLoadedEvent>* a_source)
 	{
-		/*if (a_event.loaded) {
-			RE::Actor* actor = GetFormByFormID<RE::Actor>(a_event.formId);
-			if (actor) {
-				if (extended_log)
-					logger::info("OnLoad event for actor {}", std::format("{:x}", actor->formID));
-				if (deserialized) {
-					std::thread([actor] {
-						proccess_actor_after_loaded(actor);
-					}).detach();
-				}
-			}
-		}*/
-
 		if (a_event.loaded) {
 			RE::Actor* ref = GetFormByFormID<RE::Actor>(a_event.formId);
 			if (global::is_qualified_race(ref)) {
@@ -64,12 +72,14 @@ namespace dbr_manager
 					if (!IsSerializeFinished()) {
 						looksmenu_hooked_queue.push(std::make_pair(a_event.formId, a_source));
 					} else if (auto is_excluded = IsActorExcluded(ref); (is_excluded.has_value() && !*is_excluded) && !global::is_excluded(ref)) {
-						if (!proccess_actor_after_loaded(ref))
-							//SendLooksMenuLoadEvent(a_event, a_source);
-							return g_OriginalReceiveEventObjectLoaded(LooksMenuInterfaces<ActorUpdateManager>::GetInterface(), const_cast<RE::TESObjectLoadedEvent*>(&a_event), a_source);
-					} else  // если нет в мапе или исключен из обработки (empty preset)
-						//SendLooksMenuLoadEvent(a_event, a_source);
-						return g_OriginalReceiveEventObjectLoaded(LooksMenuInterfaces<ActorUpdateManager>::GetInterface(), const_cast<RE::TESObjectLoadedEvent*>(&a_event), a_source);
+						if (!proccess_actor_after_loaded(ref)) {
+							auto evnt = a_event;
+							return g_OriginalReceiveEventObjectLoaded(LooksMenuInterfaces<ActorUpdateManager>::GetInterface(), &evnt, a_source);
+						}
+					} else {  // если нет в мапе или исключен из обработки (empty preset)
+						auto evnt = a_event;
+						return g_OriginalReceiveEventObjectLoaded(LooksMenuInterfaces<ActorUpdateManager>::GetInterface(), &evnt, a_source);
+					}
 				}
 			}
 		}
@@ -80,6 +90,11 @@ namespace dbr_manager
 	{
 		if (!actor)
 			return nullptr;
+		
+		if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("dbr_manager::ActorsManager::get Invalid actor object!");
+			return nullptr;
+		}
 
 		if (auto it = actors_map.find(actor->formID); it != actors_map.end())
 			return &it->second;
@@ -87,59 +102,15 @@ namespace dbr_manager
 			return nullptr;
 	}
 
-	//void ActorsManager::merge(ActorPreset* preset)
-	//{
-	//	if (!preset || !preset->actor) {
-	//		return;  // Проверяем наличие preset и actor
-	//	}
-
-	//	if (auto m_preset = get(preset->actor); m_preset) {
-	//		// Обновляем поля body, skin и hair, если они заданы
-	//		if (preset->body) {
-	//			m_preset->body = preset->body;
-	//		}
-	//		if (preset->skin) {
-	//			m_preset->skin = preset->skin;
-	//		}
-	//		if (preset->hair) {
-	//			m_preset->hair = preset->hair;
-	//		}
-
-	//		// Объединяем оверлеи
-	//		if (!preset->overlays.empty()) {
-	//			std::unordered_set<overlays::Collection, overlays::hashCollection, overlays::CollectionEqualByPresetId> set{};
-
-	//			// Заполняем множество уникальными оверлеями
-	//			auto fill_set = [&set](const std::vector<overlays::Collection>& col) {
-	//				for (const auto& c : col) {
-	//					set.emplace(c);
-	//				}
-	//			};
-
-	//			fill_set(m_preset->overlays);
-	//			fill_set(preset->overlays);
-
-	//			// Обновляем оверлеи в m_preset
-	//			m_preset->overlays = std::vector<overlays::Collection>(set.begin(), set.end());
-	//		}
-	//	} else {
-	//		emplace(preset);  // Если m_preset не найден, добавляем новый
-	//	}
-	//}
-
-	/*void ActorsManager::emplace(ActorPreset* preset)
-	{
-		if (!preset || preset->empty())
-			return;
-
-		auto l{ lock };
-		actors_map.insert(preset->actor->formID, std::move(*preset));
-	}*/
-
 	bool ActorsManager::move_to_map(ActorPreset&& preset)
 	{
-		if (!preset.actor)
-			return false;  
+		if (preset.actor = RE::fallout_cast<RE::Actor*>(preset.actor); !preset.actor) {
+			logger::critical("dbr_manager::ActorsManager::move_to_map Invalid actor object!");
+			preset.body.reset();
+			preset.skin.reset();
+			preset.overlays->validate();
+			return false;
+		}
 
 		// Check body preset validity
 		if (preset.body && !bodymorphs::Get(*preset.body))
@@ -166,36 +137,15 @@ namespace dbr_manager
 		return true;  // Indicate success
 	}
 
-	//bool ActorsManager::apply(ActorPreset* preset)
-	//{
-	//	if (!preset)
-	//		return false;
-
-	//	if (!preset->actor)
-	//		return false;
-
-	//	uint32_t formID = preset->actor->GetNPC()->formID;
-
-	//	// Уникальная блокировка для каждого formID
-	//	std::unique_lock<std::mutex> lock(formIDMutexes[formID].mutex);
-	//	formIDMutexes[formID].lastAccessTime = std::chrono::steady_clock::now();  // Обновляем время доступа
-
-	//	ThreadHandler<ActorPreset>::get_thread()->enqueue([&]() {
-	//
-	//		preset->apply();
-
-	//		std::thread([this]() {
-	//			std::this_thread::sleep_for(std::chrono::minutes(1));  // Ждем 1 минуту
-	//			clean_up_old_mutexes();                                // Вызываем очистку
-	//		}).detach();                                               // Отделяем поток, чтобы он работал независимо
-	//	});
-
-	//	return true;
-	//}
-
 	bool ActorsManager::apply(ActorPreset* preset)
 	{
 		if (!preset)
+			return false;
+
+		if (!preset->actor)
+			return false;
+
+		if (!RE::fallout_cast<RE::Actor*>(preset->actor))
 			return false;
 
 		if (preset->empty())
@@ -403,7 +353,9 @@ namespace dbr_manager
 			auto arr = jv.as_array();
 
 			for (auto& json : arr) {
-				ActorsManager::move_to_map(ActorPreset(json));
+				auto preset = ActorPreset(json);
+				if (!preset.empty())
+					ActorsManager::move_to_map(ActorPreset(json));
 			}
 
 			std::thread
@@ -440,6 +392,9 @@ namespace dbr_manager
 		while (q.try_pop(el)) {
 			if (!contains_in_map(el.first)) {
 				auto actor = GetFormByFormID<RE::Actor>(el.first);
+				if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+					logger::critical("dbr_manager::try_pop Invalid actor object!");
+				}
 				if (actor) {
 					auto evn = new RE::TESObjectLoadedEvent;
 					evn->formId = el.first;
@@ -456,9 +411,9 @@ namespace dbr_manager
 		deserialized = true;
 		for (auto& el : actors_map) {
 			auto actor = el.second.actor;
-			if (actor && actor->GetFullyLoaded3D()) {
-				//el.second.apply();
-				el.second.actor->Reset3D(false, RE::RESET_3D_FLAGS::kDiverseBodiesFlag, false, RE::RESET_3D_FLAGS::kNone);
+			if (actor && actor->currentProcess && actor->currentProcess->middleHigh) {
+				el.second.apply(true);
+				//el.second.actor->Reset3D(false, RE::RESET_3D_FLAGS::kDiverseBodiesFlag, false, RE::RESET_3D_FLAGS::kNone);
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
 		}
@@ -479,10 +434,19 @@ namespace dbr_manager
 	{
 		if (!actor)
 			return nullptr;
+
+		if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor)
+			return nullptr;
+
 		if (auto it = actors_map.find(actor->formID); it != actors_map.end())
 			return &it->second;
 		else
 			return nullptr;
+	}
+
+	void ActorsManager::clearMap()
+	{
+		actors_map.clear();
 	}
 }
 

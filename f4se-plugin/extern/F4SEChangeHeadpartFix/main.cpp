@@ -116,16 +116,10 @@ void remove_with_extra(RE::TESNPC* npc, RE::BGSHeadPart* hpart)
 	g_OriginalChangeHeadPartRemovePart(npc, hpart, false);
 }
 
-inline RE::TESNPC* get_leveled_TESNPC(RE::TESNPC* npc)
+inline RE::TESNPC* get_leveled_head_TESNPC(RE::TESNPC* npc)
 {
-	if (!npc)
-		return nullptr;
-
-	auto& templateFlags = npc->actorData.templateUseFlags;
-	if (((templateFlags & RE::TESActorBaseData::TemplateFlags::kFlagTraits) != 0) && npc->templateForms) {
-		npc = RE::fallout_cast<RE::TESNPC*>(*npc->templateForms);
-		npc = get_leveled_TESNPC(npc);
-	}
+	while (npc->faceNPC)
+		npc = npc->faceNPC;
 	return npc;
 }
 
@@ -134,7 +128,7 @@ void ProcessChangeHeadPart(RE::TESNPC* npc, RE::BGSHeadPart* hpart, bool bRemove
 	if (!npc || !hpart)
 		return;
 
-	auto base_npc = get_leveled_TESNPC(npc);
+	auto base_npc = get_leveled_head_TESNPC(npc);
 	npc = base_npc ? base_npc : npc;
 
 	if (g_processingChangeHeadParts.contains(npc->formID)) {

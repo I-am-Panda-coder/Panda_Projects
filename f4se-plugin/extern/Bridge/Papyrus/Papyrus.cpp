@@ -26,7 +26,7 @@ namespace Papyrus
 		PAPYRUS_BIND(Load3d);
 		PAPYRUS_BIND(Update3DPosition);
 		PAPYRUS_BIND(CutFormList);
-		PAPYRUS_BIND(isPreculled);
+		PAPYRUS_BIND(IsPreCulled);
 
 		return true;
 	}
@@ -133,18 +133,21 @@ namespace Papyrus
 		return flist;
 	}
 
-	bool isPreculled(std::monostate, RE::TESObjectREFR* obj)
+	bool IsPreCulled(std::monostate, RE::TESObjectREFR* obj)
 	{
 		if (!obj)
 			return false;
-		if (obj->IsDisabled())
-			return false;
-		auto data = obj->loadedData;
+		/*if (obj->IsDisabled())
+			return false;*/
+		/*auto data = obj->loadedData;
 		if (!data)
+			return true;*/
+		auto niav_obj = obj->Get3D();
+		if (niav_obj ? !niav_obj->GetAppCulled() : false)
 			return true;
-		//auto niav_obj = data->data3D;
-		//return niav_obj ? niav_obj->GetAppCulled() : false;
-		return false;
+
+		auto preCulled = RE::BSPreCulledObjects::Get3DForID(obj->formID);
+		return preCulled ? true : false;
 	}
 }
 

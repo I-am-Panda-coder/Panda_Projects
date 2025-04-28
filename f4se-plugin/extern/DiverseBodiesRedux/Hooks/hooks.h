@@ -42,7 +42,7 @@ using DoUpdate3DModelHandler = void(*)(RE::AIProcess*, RE::Actor*, RE::RESET_3D_
 RE::BSEventNotifyControl HookedReceiveEventObjectLoaded(ActorUpdateManager*, RE::TESObjectLoadedEvent*, void*);
 RE::BSEventNotifyControl HookedReceiveEventInitScript(ActorUpdateManager*, RE::TESInitScriptEvent*, void*);
 //void HookedReset3D(RE::Actor*, bool, RE::RESET_3D_FLAGS, bool, RE::RESET_3D_FLAGS);
-void ProcessChangeHeadPart(RE::TESNPC*, RE::BGSHeadPart*, bool, bool);
+void ProcessChangeHeadPart(RE::TESNPC* npc, RE::BGSHeadPart* hpart, bool bRemoveExtraParts, bool isRemove);
 void HookedChangeHeadPartRemovePart(RE::TESNPC*, RE::BGSHeadPart*, bool);
 void HookedChangeHeadPart(RE::TESNPC*, RE::BGSHeadPart*);
 //void HookedUpdate3DModel(RE::AIProcess*, RE::Actor*, RE::TESObjectREFR*, bool);

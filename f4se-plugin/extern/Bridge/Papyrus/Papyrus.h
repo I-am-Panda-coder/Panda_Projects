@@ -14,5 +14,5 @@ namespace Papyrus
 	int GetLoaded3dFlags(std::monostate, RE::TESObjectREFR* obj);
 	RE::BGSListForm* CutFormList(std::monostate, RE::BGSListForm* flist, RE::TESForm* cut_to_form);
 	void PatchOffsets(std::monostate);
-	bool isPreculled(std::monostate, RE::TESObjectREFR* obj);
+	bool IsPreCulled(std::monostate, RE::TESObjectREFR* obj);
 }

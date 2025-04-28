@@ -19,7 +19,6 @@
 namespace RE
 {
 	enum class ACTOR_CRITICAL_STAGE;
-	enum class ACTOR_LIFE_STATE;
 	enum class ACTOR_LOS_LOCATION;
 	enum class ATTACK_STATE_ENUM;
 	enum class PACKAGE_OBJECT_TYPE;
@@ -90,6 +89,19 @@ namespace RE
 	struct HighProcessData;
 	struct ObjectstoAcquire;
 	struct Perks;
+
+	enum class ACTOR_LIFE_STATE : std::uint32_t
+	{
+		kAlive = 0,
+		kDying = 1,
+		kDead = 2,
+		kUnconcious = 3,
+		kReanimate = 4,
+		kRecycle = 5,
+		kRestrained = 6,
+		kEssentialDown = 7,
+		kBleedout = 8
+	};
 
 	namespace ActorEquipManagerEvent
 	{
@@ -700,7 +712,7 @@ namespace RE
 		// members
 		std::uint32_t moveMode: 14;             // 08:00
 		std::uint32_t flyState: 3;              // 08:14
-		std::uint32_t lifeState: 4;             // 08:17
+		ACTOR_LIFE_STATE lifeState: 4;          // 08:17
 		std::uint32_t knockState: 4;            // 08:21
 		std::uint32_t meleeAttackState: 3;      // 08:25
 		std::uint32_t talkingToPlayer: 1;       // 08:28

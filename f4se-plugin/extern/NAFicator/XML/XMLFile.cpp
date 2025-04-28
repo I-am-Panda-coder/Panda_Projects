@@ -517,24 +517,6 @@ bool XMLfile::normalize()
 		}
 	};
 
-	//auto get_content = [this]() {
-	//	for (auto it = buffer.begin(), end = buffer.end(); it != end; ++it) {
-	//		auto key_node = valid_root_nodes.at(get_root());
-	//		if (utils::get_node_name(*it) == key_node.first) {
-	//			// Здесь добавьте логику для обработки узла
-	//		}
-	//	}
-	//};
-	//
-	//auto get_content = [this]() {
-	//	for (auto it = buffer.begin(), end = buffer.end(); it != end; ++it) {
-	//		
-	//		if (auto key_node = valid_root_nodes.at(get_root()); utils::get_node_name(*it) == key_node.first) {
-
-	//		}
-	//	}
-	//};
-
 	hasValue = true;
 
 	//Форматирование

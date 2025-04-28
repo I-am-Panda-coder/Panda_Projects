@@ -56,6 +56,7 @@ namespace Tasks
 
 		bool HookedGameLoop(void* qintfc, float unk01, uint32_t unk02) {
 			bool res = OriginalProcessQueues(qintfc, unk01, unk02);
+
 			Scene::SceneManager::UpdateScenes();
 			Scene::OrderedActionQueue::Update();
 

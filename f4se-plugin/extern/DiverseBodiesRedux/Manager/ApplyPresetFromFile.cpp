@@ -75,13 +75,17 @@ std::string ApplyBodyPresetFromFileForActor(RE::Actor* actor)
 	// Открытие окна выбора файла
 	if (GetOpenFileName(&ofn)) {
 		bodymorphs::Preset bodyPreset{ std::filesystem::path(szFile) };
-		if (!bodyPreset.empty() && actor->GetSex() == bodyPreset.get_sex()) {
-			bodyPreset.apply(actor);
-			preset_name = bodyPreset.name();
-			//UpdateBodyMorphsForActor(actor);
-		}
-		else
+		if (auto sex = actor->GetSex(); sex == RE::Actor::Sex::Female || sex == RE::Actor::Sex::Male) {
+			if (!bodyPreset.empty() && sex == bodyPreset.get_sex()) {
+				bodyPreset.apply(actor);
+				preset_name = bodyPreset.name();
+				//UpdateBodyMorphsForActor(actor);
+			} else {
+				RE::MessageMenuManager::GetSingleton()->Create("", global::message_wrong_actor_or_gender(), nullptr, RE::WARNING_TYPES::kInGameMessage);
+			}
+		} else {
 			RE::MessageMenuManager::GetSingleton()->Create("", global::message_wrong_actor_or_gender(), nullptr, RE::WARNING_TYPES::kInGameMessage);
+		}
 	} else {
 		RE::MessageMenuManager::GetSingleton()->Create("", global::message_wrong_file(), nullptr, RE::WARNING_TYPES::kInGameMessage);
 	}

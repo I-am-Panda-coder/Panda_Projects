@@ -81,6 +81,7 @@ iniSettings& iniSettings::operator=(iniSettings&& other) noexcept
 	tryLoadFromFile(i_hair_female_chance, "i_hair_female_chance", "settings");
 	tryLoadFromFile(b_skip_if_hat_equipped, "b_if_hat_equipped", "settings");
 	tryLoadFromFile(b_only_if_vanilla_hair, "b_only_if_vanilla_hair", "settings");
+	tryLoadFromFile(b_disable_change_headparts, "b_disable_change_headparts", "settings");
 	tryLoadFromFile(i_performance, "i_performance", "settings");
 	tryLoadFromFile(i_delay_timer, "i_delay_timer", "settings");
 	tryLoadFromFile(b_extended_log, "b_extended_log", "debug");
@@ -101,10 +102,12 @@ iniSettings& iniSettings::operator=(iniSettings&& other) noexcept
 
 void InitForms()
 {
+	logger::info("Init forms...");
 	logger::info("Initialized form : {} ({})", global::diversed_kwd()->formEditorID, uint32ToHexString(global::diversed_kwd()->formID));
 	logger::info("Initialized form : {} ({})", global::excluded_kwd()->formEditorID, uint32ToHexString(global::excluded_kwd()->formID));
 	logger::info("Initialized form : {} ({})", global::excluded_npc()->GetFormEditorID(), uint32ToHexString(global::excluded_npc()->formID));
 	logger::info("Initialized form : {} ({})", global::qualified_race()->GetFormEditorID(), uint32ToHexString(global::qualified_race()->formID));
+	logger::info("...forms initialized");
 }
 
 std::string uint32ToHexString(uint32_t value)
@@ -196,9 +199,20 @@ bool FileExists(const std::string& filename, const std::string& type)
 		}
 	};
 
+	if (filename.empty()) {
+		logger::info("'FileExists' false : empty name requested");
+		return false;
+	}
+
+	if (!type.empty())
+		logger::info("try to open Data/{}/{}", type, filename);
+	else
+		logger::info("try to open Data/{}", filename);
+
 	std::filesystem::path filePath = (!type.empty()) ? std::filesystem::current_path() / "Data" / type / filename : std::filesystem::current_path() / "Data" / filename;
 
 	// Проверка существования файла в файловой системе
+	std::error_code error{};
 	if (std::filesystem::exists(filePath)) {
 		//logger::info("'FileExists' true (loose) : {}", filename);
 		return true;
@@ -220,7 +234,7 @@ bool IsVanillaHair(const RE::Actor* const actor) noexcept
 	if (!actor)
 		return false;
 
-	auto npc = get_leveled_TESNPC(actor->GetNPC());
+	auto npc = get_face_TESNPC(actor->GetNPC());
 	if (!npc)
 		return false;
 
@@ -263,7 +277,7 @@ RE::BGSHeadPart* GetHairHeadPart(RE::Actor* actor)
 	if (!actor)
 		return nullptr;
 
-	auto npc = get_leveled_TESNPC(actor->GetNPC());
+	auto npc = get_face_TESNPC(actor->GetNPC());
 	if (!npc)
 		return nullptr;
 

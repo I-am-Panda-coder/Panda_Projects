@@ -460,6 +460,25 @@ namespace RE
 			return func(this, a_nameOut);
 		}
 
+		void RemoveHeadPart(BGSHeadPart* headPart, bool removeExtra) {
+			using func_t = decltype(&TESNPC::RemoveHeadPart);
+			REL::Relocation<func_t> func{ REL::Offset(0x5B5560) };
+			return func(this, headPart, removeExtra);
+		}
+
+		void AddHeadPart(BGSHeadPart* headPart, bool checkUnique = true, bool addExtra = true, bool updateActor = true) {
+			using func_t = decltype(&TESNPC::AddHeadPart);
+			REL::Relocation<func_t> func{ REL::Offset(0x5B52E0) };
+			return func(this, headPart, checkUnique, addExtra, updateActor);
+		}
+
+		void AddUniqueHeadType(BGSHeadPart* headPart)
+		{
+			using func_t = decltype(&TESNPC::AddUniqueHeadType);
+			REL::Relocation<func_t> func{ REL::Offset(0x5B9B30) };
+			return func(this, headPart);
+		}
+
 		// members
 		BGSAttachParentArray attachParents;  // 220
 		NPC_DATA data;                       // 238

@@ -6,7 +6,7 @@ using namespace std::string_view_literals;
 
 namespace ver
 {
-	inline constexpr std::size_t MAJOR = 1;
+	inline constexpr std::size_t MAJOR = 2;
 	inline constexpr std::size_t MINOR = 0;
 	inline constexpr std::size_t PATCH = 0;
 

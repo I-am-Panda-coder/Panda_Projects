@@ -319,7 +319,7 @@ inline void remove_chargen(RE::Actor* actor)
 	if (!actor)
 		return;
 
-	auto npc = get_leveled_TESNPC(actor->GetNPC());
+	auto npc = get_face_TESNPC(actor->GetNPC());
 
 	if (npc && npc->formType == RE::ENUM_FORM_ID::kNPC_) {
 		npc->actorData.actorBaseFlags |= RE::TESActorBase::ACTOR_BASE_DATA_FLAGS::kFlagIsCharGenFacePreset;
@@ -342,7 +342,7 @@ inline void remove_chargen(RE::TESNPC* npc)
 	if (!npc)
 		return;
 
-	npc = get_leveled_TESNPC(npc);
+	npc = get_face_TESNPC(npc);
 
 	if (npc && npc->formType == RE::ENUM_FORM_ID::kNPC_) {
 		npc->actorData.actorBaseFlags |= RE::TESActorBase::ACTOR_BASE_DATA_FLAGS::kFlagIsCharGenFacePreset;

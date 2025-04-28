@@ -132,7 +132,23 @@ namespace bodymorphs
 
 	void Remove(RE::Actor* actor) 
 	{
-		LooksMenuInterfaces<BodyMorphInterface>::GetInterface()->RemoveMorphsByKeyword(actor, actor->GetSex() == RE::Actor::Sex::Female, global::diversed_kwd());
+		if (!actor)
+			return;
+
+		/*if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor)
+		{
+			logger::critical("bodymorphs::Remove Invalid actor object!");
+			return;
+		}*/
+
+		auto Interface = LooksMenuInterfaces<BodyMorphInterface>::GetInterface();
+		if (!Interface) {
+			logger::critical("BodyMorphInterface is nullptr!");
+			return;
+		}
+
+		if (auto sex = actor->GetSex(); sex == RE::Actor::Sex::Female || sex == RE::Actor::Sex::Male)
+			Interface->RemoveMorphsByKeyword(actor, sex == RE::Actor::Sex::Female, global::diversed_kwd());
 	}
 
 	bool Preset::apply(RE::Actor* actor) const
@@ -140,10 +156,20 @@ namespace bodymorphs
 		if (!actor)
 			return false;
 
+		if (actor = RE::fallout_cast<RE::Actor*>(actor); !actor) {
+			logger::critical("bodymorphs::apply Invalid actor object!");
+			return false;
+		}
+
 		//LooksMenuInterfaces<BodyMorphInterface>::GetInterface()->RemoveMorphsByKeyword(actor, get_sex() == RE::Actor::Sex::Female, global::diversed_kwd());
 		Remove(actor);
 		for (const auto& [morphName, morphValue] : morphs) {
-			LooksMenuInterfaces<BodyMorphInterface>::GetInterface()->SetMorph(actor, get_sex() == RE::Actor::Sex::Female, morphName, global::diversed_kwd(), morphValue);
+			auto Interface = LooksMenuInterfaces<BodyMorphInterface>::GetInterface();
+			if (!Interface) {
+				logger::critical("BodyMorphInterface is nullptr!");
+				return false;
+			}
+			Interface->SetMorph(actor, get_sex() == RE::Actor::Sex::Female, morphName, global::diversed_kwd(), morphValue);
 		}
 
 		if (!morphs.empty()) {
@@ -207,22 +233,26 @@ namespace bodymorphs
 
 	Preset* GetRandom(RE::Actor* a)
 	{
-		return GetRandom(a->GetSex() == RE::Actor::Sex::Female, Preset::Type::NONE);
+		if (!a)
+			return nullptr;
+		
+		if (a = RE::fallout_cast<RE::Actor*>(a); !a) {
+			logger::critical("bodymorphs::GetRandom Invalid actor object!");
+			return nullptr;
+		}
+		
+		if (auto sex = a->GetSex(); sex == RE::Actor::Sex::Female || sex == RE::Actor::Sex::Male)
+			return GetRandom(sex == RE::Actor::Sex::Female, Preset::Type::NONE);
+		else
+			return nullptr;
 	}
 
 	void Parse()
 	{
-		std::filesystem::path folder;
-		try {
-			folder = std::filesystem::current_path() / "Data" / "DiverseBodiesRedux" / "BodyPresets";
-		} catch (std::bad_alloc& e) {
-			logger::error("Failed open file {} : {}", folder.string(), e.what());
-			return;
-		} catch (std::runtime_error& e) {
-			logger::error("Failed open file {} : {}", folder.string(), e.what());
-			return;
-		} catch (...) {
-			logger::error("Failed open file {} : unknown", folder.string());
+		std::filesystem::path folder = std::filesystem::current_path() / "Data" / "DiverseBodiesRedux" / "BodyPresets";
+
+		if (!std::filesystem::exists(folder)) {
+			logger::error("Skins initiallization failed. Failed to open file {}", folder.string());
 			return;
 		}
 

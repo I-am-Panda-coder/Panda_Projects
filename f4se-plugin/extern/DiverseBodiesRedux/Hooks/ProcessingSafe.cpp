@@ -43,6 +43,25 @@ std::optional<uint32_t> ProcessingNPC::find(uint32_t key) const
 	return std::nullopt;
 }
 
+std::string ProcessingNPC::print()
+{
+	std::string result;
+	if (ptr_map->empty()) {
+		result = "Current map is empty!";
+	} else {
+		result = "Current map :\n";
+		bool first = true;
+		for (auto el : *ptr_map) {
+			if (!first) {
+				result += ", ";
+			}
+			result += std::to_string(el);
+			first = false;
+		}
+	}
+	return result;
+}
+
 // Реализация SafeIterator
 ProcessingNPC::SafeIterator::SafeIterator(const ProcessingNPC& container, typename map::const_iterator iter) :
 	container(container), iter(iter), lock(container.mutex) {}
